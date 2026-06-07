@@ -28,7 +28,7 @@ body{height:100%;background:var(--bg);color:var(--tx);font-family:'Inter',ui-san
 .av svg{width:13px;height:13px}
 .bbl{max-width:80%;padding:12px;border-radius:14px;font-size:14px;line-height:1.6}
 .row:not(.u) .bbl{background:var(--bb);border:1px solid var(--bd);border-bottom-left-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.row.u .bbl{background:var(--a);color:#0A1A15;font-weight:500;border-bottom-right-radius:3px}
+.row.u .bbl{background:var(--a);color:#fff;font-weight:500;border-bottom-right-radius:3px}
 .comp{margin-left:36px;margin-bottom:4px;animation:pop .22s ease}
 
 /* ── typing ── */
@@ -38,7 +38,7 @@ body{height:100%;background:var(--bg);color:var(--tx);font-family:'Inter',ui-san
 .tdot:nth-child(2){animation-delay:.2s}.tdot:nth-child(3){animation-delay:.4s}
 
 /* ── input bar ── */
-#bar{padding:10px 12px;padding-bottom:max(14px,env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--bd)}
+#bar{padding:10px 12px;padding-bottom:max(14px,env(safe-area-inset-bottom));background:var(--bg)}
 #bri{display:flex;align-items:center;gap:8px;background:var(--s1);border:1.5px solid var(--bd);border-radius:22px;padding:10px;transition:border-color .2s;box-shadow:0 1px 3px rgba(0,0,0,.04)}
 #bri:focus-within{border-color:var(--a)}
 #inp{flex:1;background:none;border:none;outline:none;color:var(--tx);font:inherit;resize:none;max-height:90px;min-height:20px;line-height:1.4}
@@ -50,12 +50,10 @@ body{height:100%;background:var(--bg);color:var(--tx);font-family:'Inter',ui-san
 
 /* ── card base ── */
 .card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:17px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
-.card.done{opacity:.35;pointer-events:none}
+.card.done{opacity:.35;cursor:pointer;user-select:none;touch-action:manipulation}
+.card.done *{pointer-events:none}
 .ctag{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ad);margin-bottom:13px;display:flex;align-items:center;gap:6px}
-
-/* ── edit link ── */
-.edit-link{display:none;width:100%;padding:7px;background:none;border:none;color:var(--t3);font:11px 'Inter',ui-sans-serif,sans-serif;cursor:pointer;align-items:center;justify-content:center;gap:5px;margin-top:3px;transition:color .2s}
-.edit-link:hover{color:var(--a)}
+.ctag-note{font-weight:400;letter-spacing:0;text-transform:none;color:var(--t3);font-style:italic}
 
 /* ── plan options ── */
 .plans{display:flex;flex-direction:column;gap:9px}
@@ -79,7 +77,6 @@ body{height:100%;background:var(--bg);color:var(--tx);font-family:'Inter',ui-san
 .tg{display:flex;background:var(--s2);border:1.5px solid var(--bd);border-radius:8px;overflow:hidden}
 .tb{flex:1;padding:9px;border:none;background:none;color:var(--t2);font:12px/1 'Inter',ui-sans-serif,sans-serif;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;display:flex;align-items:center;justify-content:center}
 .tb.on{background:var(--a);color:#fff}
-.disc{font-size:10px;color:var(--t3);font-style:italic;display:flex;align-items:center;gap:5px}
 
 /* ── sliders ── */
 .slr{margin:14px 0}
@@ -197,14 +194,12 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
 <script>
 // ═══════════════════════════════════════════════
-// ICON LIBRARY — stroke-based, currentColor
+// ICON LIBRARY
 // ═══════════════════════════════════════════════
 const ic = {
   arrow:    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`,
   check:    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 20 4 14"/></svg>`,
   checkLg:  `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 20 4 14"/></svg>`,
-  edit:     `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
-  info:     `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`,
   shield:   `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
   trending: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
   savings:  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7 12 2"/></svg>`,
@@ -308,12 +303,12 @@ function buildIllustration() {
   const age = getAge(dob); const rows = [];
   if (plan === 'protection') {
     const mp = calcProtPremium(cover, age, term, smoker, gender); let totalPaid = 0;
-    for (let y = 1; y <= term; y++) { totalPaid += mp*12; rows.push({y,age:age+y,paid:totalPaid,cover,mat:null}); }
+    for (let y=1;y<=term;y++){totalPaid+=mp*12;rows.push({y,age:age+y,paid:totalPaid,cover,mat:null});}
   } else if (plan === 'savings') {
-    const r = 0.01/12; let fv=0, totalPaid=0;
+    const r=0.01/12; let fv=0, totalPaid=0;
     for (let y=1;y<=term;y++){for(let m=0;m<12;m++){fv=(fv+premium)*(1+r);totalPaid+=premium;}rows.push({y,age:age+y,paid:totalPaid,cover:Math.min(120*premium,1e6),mat:Math.round(fv)});}
   } else if (plan === 'investment') {
-    const r = FUNDS[fund].rate/100/12; let fv=0, totalPaid=0;
+    const r=FUNDS[fund].rate/100/12; let fv=0, totalPaid=0;
     for (let y=1;y<=term;y++){for(let m=0;m<12;m++){fv=(fv+premium)*(1+r);totalPaid+=premium;}fv*=0.99;rows.push({y,age:age+y,paid:totalPaid,cover:Math.min(120*premium,1e6),mat:Math.round(fv)});}
   }
   return rows;
@@ -321,49 +316,74 @@ function buildIllustration() {
 
 // ═══════════════════════════════════════════════
 // CARD LOCKING + EDITING
+// Double-click (desktop) or double-tap (mobile) a locked card to edit it
 // ═══════════════════════════════════════════════
 const CARD_ORDER = ['plan_card','info_card','prot_card','sav_card','inv_card','ill_card','med_card','up_card','sig_card'];
 
+const STAGE_MAP = {
+  plan_card: 'start',
+  info_card: 'plan_selected',
+  prot_card: 'info_collected',
+  sav_card:  'info_collected',
+  inv_card:  'info_collected',
+  ill_card:  'quote_accepted',
+  med_card:  'illustration_agreed',
+  up_card:   'medical_done',
+  sig_card:  'doc_uploaded',
+};
+
 function lockCard(id) {
   G(id).classList.add('done');
-  const btn = G(id + '_edit');
-  if (btn) btn.style.display = 'flex';
 }
 
 function editCard(id, resetStage) {
   const card = G(id);
   if (!card || S.busy) return;
   card.classList.remove('done');
-  const editBtn = G(id + '_edit');
-  if (editBtn) editBtn.style.display = 'none';
   const idx = CARD_ORDER.indexOf(id);
-  CARD_ORDER.slice(idx + 1).forEach(cid => { const el = G(cid); if (el) el.closest('.comp')?.remove(); });
-  if (id === 'ill_card') { const chk = G('ill_chk'); if (chk){chk.checked=false;G('ill_btn').disabled=true;} }
-  if (id === 'up_card') {
+  CARD_ORDER.slice(idx + 1).forEach(cid => { const el=G(cid); if(el) el.closest('.comp')?.remove(); });
+  if (id==='ill_card') { const chk=G('ill_chk'); if(chk){chk.checked=false;G('ill_btn').disabled=true;} }
+  if (id==='up_card') {
     G('pprev').style.display='none'; G('pprev').src='';
     const pt=G('pdf_tag'); if(pt) pt.style.display='none';
     G('nck').style.display='none'; G('up_btn').style.display='none';
     G('upz').classList.remove('active'); S.nameMatched=false;
   }
-  if (id === 'sig_card') { clearSig(); S.sigData=null; }
-  if (id === 'info_card') setTimeout(checkInfo, 50);
-  S.stage = resetStage; S.busy = false; setActive(true);
+  if (id==='sig_card') { clearSig(); S.sigData=null; }
+  if (id==='info_card') setTimeout(checkInfo, 50);
+  S.stage=resetStage; S.busy=false; setActive(true);
   card.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
-function editIllCard() {
-  const qc = G('prot_card') || G('sav_card') || G('inv_card');
-  if (qc) editCard(qc.id, 'info_collected');
-}
+let _lastTapCard=null, _lastTapTime=0;
+
+msgs.addEventListener('dblclick', e => {
+  const card = e.target.closest('.card.done');
+  if (!card || !STAGE_MAP[card.id]) return;
+  editCard(card.id, STAGE_MAP[card.id]);
+});
+
+msgs.addEventListener('touchend', e => {
+  const card = e.target.closest('.card.done');
+  if (!card || !STAGE_MAP[card.id]) return;
+  const now = Date.now();
+  if (card === _lastTapCard && now - _lastTapTime < 300) {
+    e.preventDefault();
+    editCard(card.id, STAGE_MAP[card.id]);
+    _lastTapCard=null; _lastTapTime=0;
+  } else {
+    _lastTapCard=card; _lastTapTime=now;
+  }
+}, { passive:false });
 
 // ═══════════════════════════════════════════════
 // SYSTEM PROMPT (dynamic)
 // ═══════════════════════════════════════════════
 function buildSysPrompt() {
-  const u = S.u, age = u.dob ? getAge(u.dob) : null;
-  const ctx = u.name
-    ? `CURRENT USER: Name="${u.name}", Email="${u.email}", Age=${age}, Gender=${u.gender}, Income=$${u.income}/mo, Smoker=${u.smoker?'Yes':'No'}, Selected plan="${u.plan||'none'}"`
-    : 'User has not yet provided personal details';
+  const u=S.u, age=u.dob?getAge(u.dob):null;
+  const ctx=u.name
+    ?`CURRENT USER: Name="${u.name}", Email="${u.email}", Age=${age}, Gender=${u.gender}, Income=$${u.income}/mo, Smoker=${u.smoker?'Yes':'No'}, Selected plan="${u.plan||'none'}"`
+    :'User has not yet provided personal details';
   return `You are Life Guard, a warm and empathetic life insurance advisor. Help users understand and purchase the right life insurance policy through natural, supportive conversation
 
 ${ctx}
@@ -409,65 +429,65 @@ RULES:
 // API LAYER
 // ═══════════════════════════════════════════════
 async function callAPI(userMsg) {
-  S.conv.push({ role:'user', content: userMsg });
+  S.conv.push({ role:'user', content:userMsg });
   showTyping(true);
   try {
-    const res = await fetch(API, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ messages:S.conv, systemPrompt:buildSysPrompt() }) });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'API error');
-    const text = data.content?.[0]?.text || '';
-    S.conv.push({ role:'assistant', content: text });
+    const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:S.conv,systemPrompt:buildSysPrompt()})});
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||'API error');
+    const text=data.content?.[0]?.text||'';
+    S.conv.push({role:'assistant',content:text});
     return parseResp(text);
   } catch(e) {
     S.conv.pop();
-    return { message:"I'm having a little trouble right now — please try again in a moment", action:{type:'none'} };
+    return {message:"I'm having a little trouble right now — please try again in a moment",action:{type:'none'}};
   } finally { showTyping(false); }
 }
 
 async function callAPIWithImage(userMsg, imgData) {
-  S.conv.push({ role:'user', content: userMsg });
+  S.conv.push({role:'user',content:userMsg});
   showTyping(true);
   try {
-    const res = await fetch(API, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ messages:S.conv, systemPrompt:buildSysPrompt()+'\n\nIMPORTANT: A passport image has been uploaded. Extract the full name and compare with the application name. Respond in the standard JSON format', imageData:imgData }) });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
-    const text = data.content?.[0]?.text || '';
-    S.conv.push({ role:'assistant', content: text });
+    const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:S.conv,systemPrompt:buildSysPrompt()+'\n\nIMPORTANT: A passport image has been uploaded. Extract the full name and compare with the application name. Respond in the standard JSON format',imageData:imgData})});
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error);
+    const text=data.content?.[0]?.text||'';
+    S.conv.push({role:'assistant',content:text});
     return parseResp(text);
   } catch(e) {
     S.conv.pop();
-    return { message:"There was an issue verifying your document — please try uploading again", action:{type:'none'} };
+    return {message:"There was an issue verifying your document — please try uploading again",action:{type:'none'}};
   } finally { showTyping(false); }
 }
 
 function parseResp(text) {
-  try { return JSON.parse(text); }
-  catch { const m=text.match(/\{[\s\S]*\}/); if(m) try{return JSON.parse(m[0]);}catch{} return {message:text,action:{type:'none'}}; }
+  try{return JSON.parse(text);}
+  catch{const m=text.match(/\{[\s\S]*\}/);if(m)try{return JSON.parse(m[0]);}catch{}return{message:text,action:{type:'none'}};}
 }
 
 // ═══════════════════════════════════════════════
 // CHAT RENDERING
 // ═══════════════════════════════════════════════
-function showTyping(show) { typing.style.display = show ? 'flex' : 'none'; scroll(); }
-function scroll() { setTimeout(() => msgs.scrollTop = msgs.scrollHeight, 60); }
+function showTyping(show){typing.style.display=show?'flex':'none';scroll();}
+function scroll(){setTimeout(()=>msgs.scrollTop=msgs.scrollHeight,60);}
 
 function addBot(text) {
-  const row = document.createElement('div');
-  row.className = 'row';
-  row.innerHTML = `<div class="av">${ic.brand}</div><div class="bbl">${text.replace(/\n/g,'<br>')}</div>`;
+  const row=document.createElement('div');
+  row.className='row';
+  row.innerHTML=`<div class="av">${ic.brand}</div><div class="bbl">${text.replace(/\n/g,'<br>')}</div>`;
   msgs.appendChild(row); scroll();
 }
 
 function addUser(text) {
-  const row = document.createElement('div');
-  row.className = 'row u';
-  row.innerHTML = `<div class="bbl">${text}</div>`;
+  const row=document.createElement('div');
+  row.className='row u';
+  row.innerHTML=`<div class="bbl">${text}</div>`;
   msgs.appendChild(row); scroll();
 }
 
 function addComp(html) {
-  const div = document.createElement('div');
-  div.className = 'comp'; div.innerHTML = html;
+  const div=document.createElement('div');
+  div.className='comp'; div.innerHTML=html;
   msgs.appendChild(div); scroll(); return div;
 }
 
@@ -475,9 +495,9 @@ function addComp(html) {
 // FLOW ENGINE
 // ═══════════════════════════════════════════════
 async function executeAction(action) {
-  if (!action || action.type === 'none') return;
+  if(!action||action.type==='none')return;
   await delay(360);
-  switch (action.type) {
+  switch(action.type){
     case 'show_plan_selector':    renderPlans(); break;
     case 'show_info_form':        renderInfoForm(); break;
     case 'show_protection_quote': renderProtQuote(); break;
@@ -493,63 +513,62 @@ async function executeAction(action) {
 }
 
 async function sendUserMsg() {
-  const text = inp.value.trim(); if (!text || S.busy) return;
-  S.busy = true; setActive(false); addUser(text); inp.value = ''; resizeInp();
-  const resp = await callAPI(text); addBot(resp.message); await executeAction(resp.action);
-  S.busy = false; setActive(true);
+  const text=inp.value.trim(); if(!text||S.busy)return;
+  S.busy=true; setActive(false); addUser(text); inp.value=''; resizeInp();
+  const resp=await callAPI(text); addBot(resp.message); await executeAction(resp.action);
+  S.busy=false; setActive(true);
 }
 
 async function sendAction(displayMsg, apiMsg) {
-  if (S.busy) return; S.busy = true; setActive(false); addUser(displayMsg);
-  const resp = await callAPI(apiMsg || displayMsg); addBot(resp.message); await executeAction(resp.action);
-  S.busy = false; setActive(true);
+  if(S.busy)return; S.busy=true; setActive(false); addUser(displayMsg);
+  const resp=await callAPI(apiMsg||displayMsg); addBot(resp.message); await executeAction(resp.action);
+  S.busy=false; setActive(true);
 }
 
-function setActive(v) { snd.disabled = !v; inp.disabled = !v; }
-function resizeInp() { inp.style.height='auto'; inp.style.height=Math.min(inp.scrollHeight,90)+'px'; }
+function setActive(v){snd.disabled=!v;inp.disabled=!v;}
+function resizeInp(){inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,90)+'px';}
 
 // ═══════════════════════════════════════════════
 // COMPONENT: PLAN SELECTOR
 // ═══════════════════════════════════════════════
 function renderPlans() {
-  if (G('plan_card')) return;
+  if(G('plan_card'))return;
   addComp(`
     <div class="card" id="plan_card">
       <div class="ctag">Your goal</div>
       <div class="plans">
-        <button class="po" onclick="pickPlan('protection',this)">
+        <button class="po" onclick="pickPlan('protection')">
           <span class="po-ic">${ic.shield}</span>
           <span><div class="pot">Protect my family</div><div class="pos">Pure life cover so loved ones are looked after</div></span>
         </button>
-        <button class="po" onclick="pickPlan('investment',this)">
+        <button class="po" onclick="pickPlan('investment')">
           <span class="po-ic">${ic.trending}</span>
           <span><div class="pot">Grow my wealth</div><div class="pos">Long-term investment with life cover built in</div></span>
         </button>
-        <button class="po" onclick="pickPlan('savings',this)">
+        <button class="po" onclick="pickPlan('savings')">
           <span class="po-ic">${ic.savings}</span>
           <span><div class="pot">Save for a rainy day</div><div class="pos">Guaranteed savings with assured protection</div></span>
         </button>
       </div>
-    </div>
-    <button class="edit-link" id="plan_card_edit" style="display:none" onclick="editCard('plan_card','start')">${ic.edit} Change plan</button>`);
+    </div>`);
 }
 
-async function pickPlan(plan, btn) {
-  const card = G('plan_card');
-  if (!card || card.classList.contains('done')) return;
-  lockCard('plan_card'); S.u.plan = plan; S.stage = 'plan_selected';
-  const labels = { protection:'Protect my family — pure life cover', investment:'Grow my wealth — investment with life cover', savings:'Save for a rainy day — guaranteed savings' };
-  await sendAction(labels[plan], `I've selected the ${plan} plan: ${labels[plan]} — please proceed`);
+async function pickPlan(plan) {
+  const card=G('plan_card');
+  if(!card||card.classList.contains('done'))return;
+  lockCard('plan_card'); S.u.plan=plan; S.stage='plan_selected';
+  const labels={protection:'Protect my family — pure life cover',investment:'Grow my wealth — investment with life cover',savings:'Save for a rainy day — guaranteed savings'};
+  await sendAction(labels[plan],`I've selected the ${plan} plan — please proceed`);
 }
 
 // ═══════════════════════════════════════════════
 // COMPONENT: USER INFO FORM
 // ═══════════════════════════════════════════════
 function renderInfoForm() {
-  if (G('info_card')) return;
+  if(G('info_card'))return;
   addComp(`
     <div class="card" id="info_card">
-      <div class="ctag">Your details</div>
+      <div class="ctag">Your details <span class="ctag-note">· Honest answers ensure seamless claims</span></div>
       <div class="flds">
         <input class="fi" id="f_name"  type="text"  placeholder="Full name">
         <input class="fi" id="f_email" type="email" placeholder="Email address">
@@ -567,29 +586,27 @@ function renderInfoForm() {
             <button class="tb on" onclick="setTg('smoker','no',this)">No</button>
           </div>
         </div>
-        <div class="disc">${ic.info} Honest answers ensure seamless claims</div>
       </div>
       <button class="btn" id="info_btn" disabled onclick="submitInfo()">Get my quote ${ic.arrow}</button>
-    </div>
-    <button class="edit-link" id="info_card_edit" style="display:none" onclick="editCard('info_card','plan_selected')">${ic.edit} Edit details</button>`);
-  G('f_dob').addEventListener('input', maskDOB);
-  ['f_name','f_email','f_dob','f_inc'].forEach(id => G(id).addEventListener('input', checkInfo));
+    </div>`);
+  G('f_dob').addEventListener('input',maskDOB);
+  ['f_name','f_email','f_dob','f_inc'].forEach(id=>G(id).addEventListener('input',checkInfo));
 }
 
-function maskDOB(e) {
+function maskDOB(e){
   let v=e.target.value.replace(/\D/g,'');
   if(v.length>2)v=v.slice(0,2)+'/'+v.slice(2);
   if(v.length>5)v=v.slice(0,5)+'/'+v.slice(5);
   e.target.value=v.slice(0,10);
 }
 
-function setTg(field, val, btn) {
+function setTg(field,val,btn){
   btn.parentElement.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
-  if(field==='gender') S.u.gender=val; else S.u.smoker=val==='yes';
+  if(field==='gender')S.u.gender=val;else S.u.smoker=val==='yes';
 }
 
-function checkInfo() {
+function checkInfo(){
   const nameOk=G('f_name').value.trim().length>=2;
   const emailOk=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(G('f_email').value.trim());
   const dobOk=validDOB(G('f_dob').value);
@@ -597,14 +614,14 @@ function checkInfo() {
   G('info_btn').disabled=!(nameOk&&emailOk&&dobOk&&incOk);
 }
 
-function validDOB(val) {
+function validDOB(val){
   if(val.length!==10)return false;
   const age=getAge(val);
   return age!==null&&age>=18&&age<=70;
 }
 
-async function submitInfo() {
-  const name=G('f_name').value.trim(), email=G('f_email').value.trim(), dob=G('f_dob').value.trim(), inc=Number(G('f_inc').value);
+async function submitInfo(){
+  const name=G('f_name').value.trim(),email=G('f_email').value.trim(),dob=G('f_dob').value.trim(),inc=Number(G('f_inc').value);
   let err=false;
   if(name.length<2){G('f_name').classList.add('err');err=true;}else G('f_name').classList.remove('err');
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){G('f_email').classList.add('err');err=true;}else G('f_email').classList.remove('err');
@@ -624,9 +641,9 @@ async function submitInfo() {
 // ═══════════════════════════════════════════════
 // COMPONENT: PROTECTION PLAN QUOTE
 // ═══════════════════════════════════════════════
-function renderProtQuote() {
+function renderProtQuote(){
   if(G('prot_card'))return;
-  const {cover,term}=S.q, age=getAge(S.u.dob), mp=calcProtPremium(cover,age,term,S.u.smoker,S.u.gender);
+  const {cover,term}=S.q,age=getAge(S.u.dob),mp=calcProtPremium(cover,age,term,S.u.smoker,S.u.gender);
   addComp(`
     <div class="card" id="prot_card">
       <div class="ctag">${ic.shield} Protection plan</div>
@@ -649,33 +666,32 @@ function renderProtQuote() {
       <div class="qdiv"></div>
       <div class="feat">${ic.check} We continue paying your premiums for the entirety of the policy term in case you are diagnosed with a terminal illness, become disabled, or in the event of your death (we didn't want to mention this, but such is the nature of this conversation)</div>
       <button class="btn" onclick="acceptProtQ()">This looks good, proceed ${ic.arrow}</button>
-    </div>
-    <button class="edit-link" id="prot_card_edit" style="display:none" onclick="editCard('prot_card','info_collected')">${ic.edit} Adjust quote</button>`);
+    </div>`);
 }
 
-function upProtQ() {
-  const cover=Number(G('pc_csl').value), term=Number(G('pc_tsl').value);
-  S.q.cover=cover; S.q.term=term;
+function upProtQ(){
+  const cover=Number(G('pc_csl').value),term=Number(G('pc_tsl').value);
+  S.q.cover=cover;S.q.term=term;
   const mp=calcProtPremium(cover,getAge(S.u.dob),term,S.u.smoker,S.u.gender);
-  G('pc_cv').textContent=fmt(cover); G('pc_tv').textContent=term+' years';
-  G('pc_mp').textContent=fmt(mp); G('pc_tp').textContent=fmt(mp*term*12);
+  G('pc_cv').textContent=fmt(cover);G('pc_tv').textContent=term+' years';
+  G('pc_mp').textContent=fmt(mp);G('pc_tp').textContent=fmt(mp*term*12);
   G('pc_ts').textContent=`over ${term} years`;
 }
 
-async function acceptProtQ() {
-  const {cover,term}=S.q, mp=calcProtPremium(cover,getAge(S.u.dob),term,S.u.smoker,S.u.gender);
-  S.q.premium=mp; lockCard('prot_card'); S.stage='quote_accepted'; S.busy=true; setActive(false);
+async function acceptProtQ(){
+  const {cover,term}=S.q,mp=calcProtPremium(cover,getAge(S.u.dob),term,S.u.smoker,S.u.gender);
+  S.q.premium=mp;lockCard('prot_card');S.stage='quote_accepted';S.busy=true;setActive(false);
   addUser(`Protection plan confirmed — ${fmt(cover)} cover, ${term}-year term, ${fmt(mp)}/month`);
   const resp=await callAPI(`I've accepted the Protection Plan — cover: ${fmt(cover)}, term: ${term} years, premium: ${fmt(mp)}/month — please show me the policy illustration`);
-  addBot(resp.message); await executeAction(resp.action); S.busy=false; setActive(true);
+  addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
 // ═══════════════════════════════════════════════
 // COMPONENT: SAVINGS PLAN QUOTE
 // ═══════════════════════════════════════════════
-function renderSavQuote() {
+function renderSavQuote(){
   if(G('sav_card'))return;
-  const prem=S.q.premium, term=S.q.term, cover=Math.min(120*prem,1e6), mat=calcSavMaturity(prem,term);
+  const prem=S.q.premium,term=S.q.term,cover=Math.min(120*prem,1e6),mat=calcSavMaturity(prem,term);
   addComp(`
     <div class="card" id="sav_card">
       <div class="ctag">${ic.savings} Savings plan</div>
@@ -698,31 +714,30 @@ function renderSavQuote() {
       <div class="qdiv"></div>
       <div class="feat">${ic.check} We continue paying your premiums for the entirety of the policy term in case you are diagnosed with a terminal illness, become disabled, or in the event of your death (we didn't want to mention this, but such is the nature of this conversation)</div>
       <button class="btn" onclick="acceptSavQ()">This looks good, proceed ${ic.arrow}</button>
-    </div>
-    <button class="edit-link" id="sav_card_edit" style="display:none" onclick="editCard('sav_card','info_collected')">${ic.edit} Adjust quote</button>`);
+    </div>`);
 }
 
-function upSavQ() {
-  const prem=Number(G('sv_psl').value), term=Number(G('sv_tsl').value);
-  S.q.premium=prem; S.q.term=term; const cover=Math.min(120*prem,1e6);
-  G('sv_pv').textContent=fmt(prem); G('sv_tv').textContent=term+' years';
-  G('sv_cv').textContent=fmt(cover); G('sv_mv').textContent=fmt(calcSavMaturity(prem,term));
-  G('sv_tp').textContent=fmt(prem*term*12); G('sv_ts').textContent=`over ${term} years`;
+function upSavQ(){
+  const prem=Number(G('sv_psl').value),term=Number(G('sv_tsl').value);
+  S.q.premium=prem;S.q.term=term;const cover=Math.min(120*prem,1e6);
+  G('sv_pv').textContent=fmt(prem);G('sv_tv').textContent=term+' years';
+  G('sv_cv').textContent=fmt(cover);G('sv_mv').textContent=fmt(calcSavMaturity(prem,term));
+  G('sv_tp').textContent=fmt(prem*term*12);G('sv_ts').textContent=`over ${term} years`;
 }
 
-async function acceptSavQ() {
-  const {premium,term}=S.q; lockCard('sav_card'); S.stage='quote_accepted'; S.busy=true; setActive(false);
+async function acceptSavQ(){
+  const {premium,term}=S.q;lockCard('sav_card');S.stage='quote_accepted';S.busy=true;setActive(false);
   addUser(`Savings plan confirmed — ${fmt(premium)}/month, ${term}-year term`);
   const resp=await callAPI(`I've accepted the savings plan — premium: ${fmt(premium)}/month, term: ${term} years — please show me the illustration`);
-  addBot(resp.message); await executeAction(resp.action); S.busy=false; setActive(true);
+  addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
 // ═══════════════════════════════════════════════
 // COMPONENT: INVESTMENT PLAN QUOTE
 // ═══════════════════════════════════════════════
-function renderInvQuote() {
+function renderInvQuote(){
   if(G('inv_card'))return;
-  const prem=S.q.premium, term=S.q.term, fund=S.q.fund, cover=Math.min(120*prem,1e6), mat=calcInvMaturity(prem,term,fund);
+  const prem=S.q.premium,term=S.q.term,fund=S.q.fund,cover=Math.min(120*prem,1e6),mat=calcInvMaturity(prem,term,fund);
   addComp(`
     <div class="card" id="inv_card">
       <div class="ctag">${ic.trending} Investment plan</div>
@@ -753,40 +768,37 @@ function renderInvQuote() {
       <div class="feat" style="margin-bottom:10px">${ic.check} We continue paying your premiums for the entirety of the policy term in case you are diagnosed with a terminal illness, become disabled, or in the event of your death (we didn't want to mention this, but such is the nature of this conversation)</div>
       <div class="warn">${ic.warn} Past returns are not indicative of future gains — please invest as per your risk appetite</div>
       <button class="btn" onclick="acceptInvQ()">This looks good, proceed ${ic.arrow}</button>
-    </div>
-    <button class="edit-link" id="inv_card_edit" style="display:none" onclick="editCard('inv_card','info_collected')">${ic.edit} Adjust quote</button>`);
+    </div>`);
 }
 
-function pickFund(key, el) {
+function pickFund(key,el){
   document.querySelectorAll('#fund_opts .fnd').forEach(f=>f.classList.remove('sel'));
-  el.classList.add('sel'); S.q.fund=key; upInvQ();
+  el.classList.add('sel');S.q.fund=key;upInvQ();
 }
 
-function upInvQ() {
-  const prem=Number(G('iv_psl').value), term=Number(G('iv_tsl').value);
-  S.q.premium=prem; S.q.term=term; const cover=Math.min(120*prem,1e6), mat=calcInvMaturity(prem,term,S.q.fund);
-  G('iv_pv').textContent=fmt(prem); G('iv_tv').textContent=term+' years';
-  G('iv_cv').textContent=fmt(cover); G('iv_mv').textContent=fmt(mat);
-  G('iv_ms').textContent=`after ${term} yrs · ${FUNDS[S.q.fund].label}`; G('iv_tp').textContent=fmt(prem*term*12);
+function upInvQ(){
+  const prem=Number(G('iv_psl').value),term=Number(G('iv_tsl').value);
+  S.q.premium=prem;S.q.term=term;const cover=Math.min(120*prem,1e6),mat=calcInvMaturity(prem,term,S.q.fund);
+  G('iv_pv').textContent=fmt(prem);G('iv_tv').textContent=term+' years';
+  G('iv_cv').textContent=fmt(cover);G('iv_mv').textContent=fmt(mat);
+  G('iv_ms').textContent=`after ${term} yrs · ${FUNDS[S.q.fund].label}`;G('iv_tp').textContent=fmt(prem*term*12);
 }
 
-async function acceptInvQ() {
-  const {premium,term,fund}=S.q, mat=calcInvMaturity(premium,term,fund);
-  lockCard('inv_card'); S.stage='quote_accepted'; S.busy=true; setActive(false);
+async function acceptInvQ(){
+  const {premium,term,fund}=S.q,mat=calcInvMaturity(premium,term,fund);
+  lockCard('inv_card');S.stage='quote_accepted';S.busy=true;setActive(false);
   addUser(`Investment plan confirmed — ${fmt(premium)}/month, ${term} yrs, ${FUNDS[fund].label} Fund`);
   const resp=await callAPI(`I've accepted the investment plan — premium: ${fmt(premium)}/month, term: ${term} years, fund: ${FUNDS[fund].label} (${FUNDS[fund].rate}%), projected maturity: ${fmt(mat)} — please show the illustration`);
-  addBot(resp.message); await executeAction(resp.action); S.busy=false; setActive(true);
+  addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
 // ═══════════════════════════════════════════════
 // COMPONENT: ILLUSTRATION TABLE
 // ═══════════════════════════════════════════════
-function renderIllustration() {
+function renderIllustration(){
   if(G('ill_card'))return;
-  const rows=buildIllustration(), isP=S.u.plan==='protection';
-  const hdr=isP
-    ?'<th>Yr</th><th>Age</th><th>Premiums paid</th><th>Life cover</th>'
-    :'<th>Yr</th><th>Age</th><th>Premiums paid</th><th>Life cover</th><th>Maturity value</th>';
+  const rows=buildIllustration(),isP=S.u.plan==='protection';
+  const hdr=isP?'<th>Yr</th><th>Age</th><th>Premiums paid</th><th>Life cover</th>':'<th>Yr</th><th>Age</th><th>Premiums paid</th><th>Life cover</th><th>Maturity value</th>';
   const tBody=rows.map(r=>`<tr><td>${r.y}</td><td>${r.age}</td><td>${fmt(r.paid)}</td><td>${fmt(r.cover)}</td>${isP?'':`<td>${fmt(r.mat)}</td>`}</tr>`).join('');
   const last=rows[rows.length-1];
   const totRow=`<tr class="tot"><td>Total</td><td>—</td><td>${fmt(last.paid)}</td><td>${fmt(last.cover)}</td>${isP?'':`<td>${fmt(last.mat)}</td>`}</tr>`;
@@ -796,23 +808,22 @@ function renderIllustration() {
       <div class="ilw"><table class="ilt"><thead><tr>${hdr}</tr></thead><tbody>${tBody}</tbody><tfoot>${totRow}</tfoot></table></div>
       <label class="decl"><input type="checkbox" id="ill_chk" onchange="G('ill_btn').disabled=!this.checked"> I hereby confirm that I have fully read and understood the policy terms, conditions, and the illustration above</label>
       <button class="btn" id="ill_btn" disabled onclick="agreeIll()">I agree, proceed ${ic.arrow}</button>
-    </div>
-    <button class="edit-link" id="ill_card_edit" style="display:none" onclick="editIllCard()">${ic.edit} Adjust quote</button>`);
+    </div>`);
 }
 
-async function agreeIll() {
-  lockCard('ill_card'); S.stage='illustration_agreed';
-  await sendAction('Policy illustration agreed', "I've reviewed and agreed to the policy illustration — please proceed to the medical questionnaire");
+async function agreeIll(){
+  lockCard('ill_card');S.stage='illustration_agreed';
+  await sendAction('Policy illustration agreed',"I've reviewed and agreed to the policy illustration — please proceed to the medical questionnaire");
 }
 
 // ═══════════════════════════════════════════════
 // COMPONENT: MEDICAL QUESTIONNAIRE
 // ═══════════════════════════════════════════════
-function renderMedical() {
+function renderMedical(){
   if(G('med_card'))return;
   addComp(`
     <div class="card" id="med_card">
-      <div class="ctag">Medical questionnaire</div>
+      <div class="ctag">Medical questionnaire <span class="ctag-note">· Honest answers ensure seamless claims</span></div>
       <div class="mq">
         <div class="bmir">
           <input class="fi" id="m_h" type="number" placeholder="Height (cm)" min="100" max="250" oninput="calcBMI()">
@@ -842,35 +853,33 @@ function renderMedical() {
       <div class="mq"><span class="ml">Hazardous activities — diving, motorsport, or similar?</span>
         <div class="rg"><button class="rb on" onclick="setRb('haz','no',this)">No</button><button class="rb" onclick="setRb('haz','yes',this)">Yes</button></div>
       </div>
-      <div class="disc" style="margin-bottom:4px">${ic.info} Honest answers ensure seamless claims</div>
       <button class="btn" onclick="submitMed()">Submit medical information ${ic.arrow}</button>
-    </div>
-    <button class="edit-link" id="med_card_edit" style="display:none" onclick="editCard('med_card','illustration_agreed')">${ic.edit} Edit medical information</button>`);
+    </div>`);
 }
 
-function calcBMI() {
-  const h=Number(G('m_h').value), w=Number(G('m_w').value);
+function calcBMI(){
+  const h=Number(G('m_h').value),w=Number(G('m_w').value);
   if(h>0&&w>0){const bmi=(w/Math.pow(h/100,2)).toFixed(1);const box=G('bmi_box');box.textContent='BMI '+bmi;box.style.color=(bmi<18.5||bmi>30)?'var(--gold)':'var(--a)';}
 }
 
-function setRb(key, val, btn) {
+function setRb(key,val,btn){
   btn.parentElement.querySelectorAll('.rb').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on'); S.medVals[key]=val;
+  btn.classList.add('on');S.medVals[key]=val;
 }
 
-async function submitMed() {
-  const h=G('m_h').value||'—', w=G('m_w').value||'—', mv=S.medVals;
-  lockCard('med_card'); S.stage='medical_done'; S.busy=true; setActive(false);
+async function submitMed(){
+  const h=G('m_h').value||'—',w=G('m_w').value||'—',mv=S.medVals;
+  lockCard('med_card');S.stage='medical_done';S.busy=true;setActive(false);
   addUser('Medical information submitted');
   const summary=`Height:${h}cm, Weight:${w}kg, Alcohol:${mv.alc}, Chronic conditions:${mv.cc}, Hospitalised:${mv.hosp}, Medication:${mv.medic}, Family history:${mv.fhist}, Hazardous activities:${mv.haz}`;
   const resp=await callAPI(`Medical questionnaire complete — ${summary} — please proceed to document upload`);
-  addBot(resp.message); await executeAction(resp.action); S.busy=false; setActive(true);
+  addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
 // ═══════════════════════════════════════════════
 // COMPONENT: DOCUMENT UPLOAD
 // ═══════════════════════════════════════════════
-function renderUpload() {
+function renderUpload(){
   if(G('up_card'))return;
   addComp(`
     <div class="card" id="up_card">
@@ -885,49 +894,40 @@ function renderUpload() {
       <div id="pdf_tag" style="display:none;margin-top:10px;padding:10px;background:var(--s2);border:1px solid var(--bd);border-radius:8px;font-size:12px;color:var(--t2);align-items:center;gap:7px"></div>
       <div class="nck" id="nck"></div>
       <button class="btn" id="up_btn" style="display:none" onclick="confirmPassport()">Confirmed, proceed ${ic.arrow}</button>
-    </div>
-    <button class="edit-link" id="up_card_edit" style="display:none" onclick="editCard('up_card','medical_done')">${ic.edit} Re-upload document</button>`);
+    </div>`);
 }
 
-async function handlePassport(input) {
-  const file=input.files[0]; if(!file)return;
+async function handlePassport(input){
+  const file=input.files[0];if(!file)return;
   G('upz').classList.add('active');
   const isPDF=file.type==='application/pdf';
   const reader=new FileReader();
   reader.onload=async e=>{
-    const b64=e.target.result.split(',')[1], mtype=file.type||'image/jpeg';
-    if(isPDF){
-      G('pprev').style.display='none';
-      const pt=G('pdf_tag'); pt.innerHTML=`${ic.doc} ${file.name}`; pt.style.display='flex';
-    } else {
-      G('pprev').src=e.target.result; G('pprev').style.display='block';
-    }
-    S.busy=true; setActive(false);
+    const b64=e.target.result.split(',')[1],mtype=file.type||'image/jpeg';
+    if(isPDF){G('pprev').style.display='none';const pt=G('pdf_tag');pt.innerHTML=`${ic.doc} ${file.name}`;pt.style.display='flex';}
+    else{G('pprev').src=e.target.result;G('pprev').style.display='block';}
+    S.busy=true;setActive(false);
     const checkMsg=`The user has uploaded their passport — please extract the name from the passport (from the MRZ or data page) and check if it matches the application name "${S.u.name}" — state whether they match or not, and be specific`;
     const resp=await callAPIWithImage(checkMsg,{base64:b64,mediaType:mtype});
     addBot(resp.message);
     const isMatch=/match|correct|verified|same|confirm/i.test(resp.message)&&!/not match|mismatch|differ|incorrect/i.test(resp.message);
     const nck=G('nck');
-    if(isMatch){
-      nck.className='nck ok'; nck.innerHTML=`${ic.check} Name verified — ${S.u.name}`; nck.style.display='flex';
-      S.nameMatched=true; G('up_btn').style.display='flex';
-    } else {
-      nck.className='nck fail'; nck.innerHTML='Name mismatch — please check and re-upload'; nck.style.display='flex';
-    }
-    S.busy=false; setActive(true);
+    if(isMatch){nck.className='nck ok';nck.innerHTML=`${ic.check} Name verified — ${S.u.name}`;nck.style.display='flex';S.nameMatched=true;G('up_btn').style.display='flex';}
+    else{nck.className='nck fail';nck.innerHTML='Name mismatch — please check and re-upload';nck.style.display='flex';}
+    S.busy=false;setActive(true);
   };
   reader.readAsDataURL(file);
 }
 
-async function confirmPassport() {
-  lockCard('up_card'); S.stage='doc_uploaded';
-  await sendAction('Passport verified', "My passport has been verified successfully — please proceed to the digital signature");
+async function confirmPassport(){
+  lockCard('up_card');S.stage='doc_uploaded';
+  await sendAction('Passport verified',"My passport has been verified successfully — please proceed to the digital signature");
 }
 
 // ═══════════════════════════════════════════════
 // COMPONENT: DIGITAL SIGNATURE
 // ═══════════════════════════════════════════════
-function renderSignature() {
+function renderSignature(){
   if(G('sig_card'))return;
   addComp(`
     <div class="card" id="sig_card">
@@ -937,15 +937,14 @@ function renderSignature() {
       <div class="sgh">Draw your signature above</div>
       <button class="gbtn" onclick="clearSig()">Clear</button>
       <button class="btn" onclick="submitSig()">Submit signature ${ic.arrow}</button>
-    </div>
-    <button class="edit-link" id="sig_card_edit" style="display:none" onclick="editCard('sig_card','doc_uploaded')">${ic.edit} Re-sign</button>`);
+    </div>`);
   initSigPad();
 }
 
-function initSigPad() {
-  const canvas=G('sigc'), ctx=canvas.getContext('2d'), dpr=window.devicePixelRatio||1, w=canvas.offsetWidth||400;
-  canvas.width=w*dpr; canvas.height=145*dpr; ctx.scale(dpr,dpr);
-  ctx.strokeStyle='#0BAF88'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.lineJoin='round';
+function initSigPad(){
+  const canvas=G('sigc'),ctx=canvas.getContext('2d'),dpr=window.devicePixelRatio||1,w=canvas.offsetWidth||400;
+  canvas.width=w*dpr;canvas.height=145*dpr;ctx.scale(dpr,dpr);
+  ctx.strokeStyle='#0BAF88';ctx.lineWidth=2;ctx.lineCap='round';ctx.lineJoin='round';
   let drawing=false;
   function pos(e){const r=canvas.getBoundingClientRect(),src=e.touches?e.touches[0]:e;return{x:(src.clientX-r.left)*(canvas.width/dpr/r.width),y:(src.clientY-r.top)*(canvas.height/dpr/r.height)};}
   function start(e){e.preventDefault();drawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);}
@@ -958,18 +957,18 @@ function initSigPad() {
 
 function clearSig(){const c=window._sigCanvas;if(c)window._sigCtx.clearRect(0,0,c.width,c.height);}
 
-async function submitSig() {
-  const c=window._sigCanvas; if(!c)return;
+async function submitSig(){
+  const c=window._sigCanvas;if(!c)return;
   const data=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
   if(!Array.from(data).some((v,i)=>i%4===3&&v>0)){addBot("Please draw your signature on the canvas before proceeding");return;}
-  S.sigData=c.toDataURL(); lockCard('sig_card'); S.stage='signed';
+  S.sigData=c.toDataURL();lockCard('sig_card');S.stage='signed';
   await sendAction('Signature submitted',"I've provided my digital signature — please proceed to payment");
 }
 
 // ═══════════════════════════════════════════════
 // COMPONENT: PAYMENT
 // ═══════════════════════════════════════════════
-function renderPayment() {
+function renderPayment(){
   if(G('pay_card'))return;
   let amount=S.q.premium;
   if(S.u.plan==='protection')amount=calcProtPremium(S.q.cover,getAge(S.u.dob),S.q.term,S.u.smoker,S.u.gender);
@@ -994,26 +993,26 @@ function renderPayment() {
 function fmtCard(el){let v=el.value.replace(/\D/g,'').slice(0,16);el.value=v.match(/.{1,4}/g)?.join(' ')||v;}
 function fmtExp(el){let v=el.value.replace(/\D/g,'');if(v.length>2)v=v.slice(0,2)+' / '+v.slice(2,4);el.value=v;}
 
-async function submitPay(fmtAmt) {
-  const nm=G('py_name').value.trim(), cd=G('py_card').value.replace(/\s/g,''), ex=G('py_exp').value.replace(/[\s\/]/g,''), cv=G('py_cvv').value.trim();
+async function submitPay(fmtAmt){
+  const nm=G('py_name').value.trim(),cd=G('py_card').value.replace(/\s/g,''),ex=G('py_exp').value.replace(/[\s\/]/g,''),cv=G('py_cvv').value.trim();
   let err=false;
   if(!nm){G('py_name').classList.add('err');err=true;}else G('py_name').classList.remove('err');
   if(cd.length<13){G('py_card').classList.add('err');err=true;}else G('py_card').classList.remove('err');
   if(ex.length<3){G('py_exp').classList.add('err');err=true;}else G('py_exp').classList.remove('err');
   if(cv.length<3){G('py_cvv').classList.add('err');err=true;}else G('py_cvv').classList.remove('err');
   if(err)return;
-  const btn=G('pay_btn'); btn.disabled=true; btn.textContent='Processing…';
+  const btn=G('pay_btn');btn.disabled=true;btn.textContent='Processing…';
   await delay(1800);
-  G('pay_card').classList.add('done'); S.stage='paid'; S.busy=true; setActive(false);
+  G('pay_card').classList.add('done');S.stage='paid';S.busy=true;setActive(false);
   addUser(`Payment of ${fmtAmt} processed`);
   const resp=await callAPI(`Payment was successful — please show the confirmation screen now`);
-  addBot(resp.message); await executeAction(resp.action); S.busy=false; setActive(true);
+  addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
 // ═══════════════════════════════════════════════
 // COMPONENT: CONFIRMATION
 // ═══════════════════════════════════════════════
-function renderConfirmation() {
+function renderConfirmation(){
   if(G('conf_card'))return;
   const first=S.u.name.split(' ')[0];
   addComp(`
@@ -1028,7 +1027,7 @@ function renderConfirmation() {
         </div>
       </div>
     </div>`);
-  S.stage='completed'; inp.placeholder='Your application is being processed…'; inp.disabled=true; snd.disabled=true;
+  S.stage='completed';inp.placeholder='Your application is being processed…';inp.disabled=true;snd.disabled=true;
 }
 
 // ═══════════════════════════════════════════════
