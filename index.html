@@ -285,7 +285,8 @@ function lockCard(id){
 }
 
 function editCard(id,resetStage,force=false){
-  const card=G(id); if(!card||(S.busy&&!force))return;
+  const card=G(id);if(!card||(S.busy&&!force))return;
+  if(id==='plan_card'){S.u={name:'',email:'',dob:'',gender:'male',income:0,smoker:false,plan:''};S.nameMatched=false;S.medVals={alc:'none',cc:'no',hosp:'no',medic:'no',fhist:'no',haz:'no'};S.nominees=[];}
   card.classList.remove('done');
   const sentinel=msgs.querySelector(`[data-sentinel="${id}"]`);
   if(sentinel){
@@ -336,9 +337,9 @@ VALID ACTION TYPES (choose exactly one):
 - none                 → just a conversational response
 - show_plan_selector   → show the 3 plan choice cards
 - show_info_form       → show the user details collection form
-- show_protection_quote
-- show_savings_quote
-- show_investment_quote
+- show_protection_quote   optional data: {"cover":0,"term":0} — values applied to S.q before rendering
+- show_savings_quote      optional data: {"premium":0,"term":0} — values applied to S.q before rendering
+- show_investment_quote   optional data: {"premium":0,"term":0,"fund":"aggressive|balanced|passive"} — values applied to S.q before rendering
 - show_illustration    → year-by-year policy illustration
 - show_medical         → medical questionnaire
 - show_signature       → digital signature pad
@@ -352,6 +353,7 @@ VALID ACTION TYPES (choose exactly one):
 - passport_verified         → emit when passport name is confirmed to match the application name "${u.name}"
 - reset_to_plan_selection   → emit when user wants to change plan but hasn't specified which — returns them to the plan selector card
 - show_nominee              → collect beneficiary/nominee details after payment
+- prefill_nominee           → pre-fill beneficiary card from conversation; data: [{"name":"","relationship":"Spouse|Child|Parent|Sibling|Other","share":0}] — shares must total 100; only emit after show_nominee has rendered the card
 
 PLAN TERMINOLOGY — map these to the correct plan type:
 - protection: "term plan", "term insurance", "term life", "pure protection", "pure life cover"
@@ -361,11 +363,12 @@ If the user expresses a clear plan preference in natural language at any stage:
 - If u.name is not yet set (no progress to lose): emit select_plan immediately
 - If u.name is already set (user has filled their details or beyond): first warn that switching plans will clear current progress and ask if they want to proceed (action none) — only emit select_plan on the next turn if the user confirms
 - If the user declines, acknowledge and continue the current journey normally
+- When you have just warned the user that switching plans will clear progress and asked if they want to proceed: on the very next user turn the ONLY valid actions are select_plan, reset_to_plan_selection, or none — do NOT emit confirm_active_card regardless of what the user says, since their reply is answering your plan-change question
 
 DOCUMENT HANDLING — for any document shared at any stage:
-- Passport + passportVerified false + info card not yet filled: ask "Should I use this to fill in your details?" — on yes, emit prefill_info with extracted name, dob, gender
-- Passport + passportVerified false + info card already filled: verify name matches "${u.name}" — if match emit passport_verified; if mismatch tell the user clearly
-- Passport + passportVerified already true: acknowledge and continue
+- Passport or government-issued photo ID (driving licence, national ID, residence permit) + passportVerified false + info card not yet filled: ask "Should I use this to fill in your details?" — on yes, emit prefill_info with extracted name, dob, gender
+- Passport or government-issued photo ID + passportVerified false + info card already filled: verify name matches "${u.name}" — if match emit passport_verified; if mismatch tell the user clearly
+- Passport or government-issued photo ID + passportVerified already true: acknowledge and continue
 - Insurance document: run a structured comparison:
   1. Extract: insurer, plan type, sum assured, monthly premium, policy term remaining, key features, visible exclusions
   2. Compare against Life Guard best-fit plan or active journey plan:
@@ -377,37 +380,43 @@ DOCUMENT HANDLING — for any document shared at any stage:
   3. Give an honest verdict — if the existing policy is genuinely better value, say so clearly; do not oversell Life Guard
   4. If plan type differs and user wants a proper comparison: emit select_plan with the detected type
   5. If user decides to proceed with Life Guard: continue the journey normally
+- Any other document type (CV, resume, bank statement, utility bill, etc.):
+  If info card is active or not yet submitted: acknowledge what the document is; offer to extract any visible personal details (name, email, DOB) to pre-fill the application form; do NOT mention policy comparison
+  Otherwise: acknowledge the document type, note it cannot be used in this context, redirect to the current journey step; action none
 
 JOURNEY LOGIC — cards are the confirmation gates; guide the user to each one through conversation:
 - Stage "plan_selected": if user details are unknown emit show_info_form; if details are already known from conversation emit prefill_info directly — it renders the form automatically
 - Stage "info_collected": DO NOT show the quote immediately — first run a brief needs assessment in one message:
   Ask: (1) any outstanding mortgage or total loans, (2) number of financial dependents, (3) any existing personal life insurance with sum assured and years remaining
   Note: employer/group insurance is NOT personal coverage — flag this if mentioned
-  Once answered or skipped: emit show_${u.plan||'[plan]'}_quote; then emit prefill_quote with adjusted cover:
+  Once answered or skipped: emit show_${u.plan||'[plan]'}_quote with data.cover set to the adjusted cover:
   Adjusted cover = min(max(10 × income × 12 + outstanding_loans − existing_personal_cover, 50000), 1000000)
   Briefly explain the number: "this replaces your income for 10 years, covers your loans, and accounts for your existing policy"
-  If user skips or already addressed these in conversation: proceed with default cover
+  If user skips: emit show_${u.plan||'[plan]'}_quote with no data — default cover applies
+  If mortgage/loan, dependent and existing coverage information was already given earlier in the conversation: skip the assessment entirely and emit the quote action directly with the adjusted cover
 - Stage "quote_accepted": trigger show_illustration
 - Stage "illustration_agreed": emit show_medical; on the following turn if medical info is known emit prefill_medical
-- Stage "medical_done" + passportVerified false: ask user to share passport via the paperclip button — action none
+- Stage "medical_done" + passportVerified false: ask user to share a government-issued photo ID (passport, driving licence, national ID, or residence permit) via the paperclip button — action none
 - If user wants to change plan but hasn't specified which one: first warn that current progress will be cleared and ask if they want to proceed (action none) — only emit reset_to_plan_selection on the next turn if the user confirms
 - Stage "medical_done" + passportVerified true: trigger show_signature directly
 - Stage "doc_uploaded": trigger show_signature
 - Stage "signed": trigger show_payment
-- Stage "paid": trigger show_nominee
+- Stage "paid": trigger show_nominee; if nominee information is already known from conversation emit prefill_nominee on the following turn
 - Stage "nominee_done": trigger show_confirmation
 
 CONFIRMATION DETECTION — when activeCard is set and is not plan_card, nom_card, sig_card or pay_card:
-- User's message clearly and solely expresses intent to confirm the current card (e.g. "yes", "proceed", "looks good", "confirm", "go ahead", "that's right", "sure", "fine") with no other content → emit confirm_active_card
-- If "yes" or similar is answering a specific question you just asked (e.g. smoker status, hazardous activities), treat it as a conversational answer — do NOT emit confirm_active_card
+Priority rule — check your immediately preceding message first:
+- If it contained ANY yes/no question → treat "yes", "no", "yeah", "nope" and similar as answering that question; do NOT emit confirm_active_card regardless of activeCard
+- If it contained NO question AND the user's message consists solely of a confirmation word (yes, sure, ok, proceed, go ahead, looks good, that's right, fine, yep, absolutely) → emit confirm_active_card
+- If the user's message contains a confirmation AND a question or qualifier ("yes but what does surrender value mean?") → answer the question; action none
 - plan_card active: tell the user to pick from the plan options on the card above
 - sig_card active: tell the user to draw their signature on the canvas
 - pay_card active: tell the user to fill in their card details
 
 SENSITIVE SCENARIOS:
-- Recent bereavement mentioned: acknowledge the loss warmly and pause the journey — do not push plan selection until the user signals they are ready to continue
+- Recent bereavement mentioned: acknowledge the loss warmly and pause the journey — do not push plan selection until the user signals they are ready to continue; when they do signal readiness, pick up exactly where you left off without repeating completed steps
 - User mentions a serious or terminal diagnosis: express empathy; note that pre-existing conditions must be disclosed on the medical form and may affect coverage terms; do not proceed without their acknowledgment
-- Monthly premium would exceed 20% of stated income: flag affordability before showing the quote; suggest adjusting cover or term to bring the premium within reach
+- Affordability: for savings and investment plans the premium is known before showing the quote — if it exceeds 20% of income flag the concern and suggest adjusting before emitting show_*_quote; for protection plans the premium is only known at acceptance — if the accepted premium exceeds 20% of income, acknowledge the acceptance, flag the concern, suggest adjusting cover or term, and wait for explicit confirmation before emitting show_illustration; action none until they confirm
 - User expresses anxiety about discussing death or mortality: gently reframe — the policy is an act of love and care for the people who depend on them, not a prediction
 - User mentions they cannot afford much: help them find the minimum viable coverage rather than defaulting to 120× income
 
@@ -419,8 +428,9 @@ RULES:
 - Acknowledge death/disability topics with sensitivity
 - If asked off-topic questions, acknowledge briefly and redirect to insurance
 - Do not re-trigger already-completed stages
+- If the user wants to change something on a card already confirmed, tell them: "You can edit it by double-clicking (desktop) or double-tapping (mobile) on the card" — action none
 - For free-form insurance questions use action "none"
-- If user says their employer provides insurance: acknowledge it as a valuable benefit; note it is group coverage tied to their employment — it ends when they change or lose their job, typically covers only 2-4× salary, and cannot be personalised; recommend a personal policy as a portable permanent foundation; action none`;
+- If user says their employer provides insurance: acknowledge it as a valuable benefit; note it is group coverage tied to their employment — it ends when they change or lose their job, typically covers only 2-4× salary, and cannot be personalised; recommend a personal policy as a portable permanent foundation; end your message with a re-engagement prompt based on current stage — if no plan selected: "Which would suit you better — pure protection, a savings plan, or a market-linked investment?"; if plan selected but quote not yet shown: "Shall I build you a quote on top of your employer coverage?"; action none`;
 }
 
 // ── API layer ──
@@ -494,15 +504,16 @@ async function executeAction(action){
   switch(action.type){
     case 'show_plan_selector':    renderPlans();break;
     case 'show_info_form':        renderInfoForm();break;
-    case 'show_protection_quote': renderProtQuote();break;
-    case 'show_savings_quote':    renderSavQuote();break;
-    case 'show_investment_quote': renderInvQuote();break;
+    case 'show_protection_quote': if(action.data?.cover!==undefined)S.q.cover=action.data.cover;if(action.data?.term!==undefined)S.q.term=action.data.term;renderProtQuote();break;
+    case 'show_savings_quote':    if(action.data?.premium!==undefined)S.q.premium=action.data.premium;if(action.data?.term!==undefined)S.q.term=action.data.term;renderSavQuote();break;
+    case 'show_investment_quote': if(action.data?.premium!==undefined)S.q.premium=action.data.premium;if(action.data?.term!==undefined)S.q.term=action.data.term;if(action.data?.fund!==undefined)S.q.fund=action.data.fund;renderInvQuote();break;
     case 'show_illustration':     renderIllustration();break;
     case 'show_medical':          renderMedical();break;
     case 'show_signature':        renderSignature();break;
     case 'show_payment':          renderPayment();break;
     case 'show_confirmation':     renderConfirmation();break;
     case 'show_nominee':          renderNominee();break;
+    case 'prefill_nominee':       handlePrefillNominee(action.data);break;
     case 'select_plan':           handleSelectPlan(action.data);break;
     case 'prefill_info':          handlePrefillInfo(action.data);break;
     case 'prefill_quote':         handlePrefillQuote(action.data);break;
@@ -519,10 +530,10 @@ function handleSelectPlan(data){
   const hadDetails=!!(S.u.name&&S.u.dob&&S.u.income);
   S.u.plan=plan;
   if(plan==='protection'){
-  S.q.cover=S.u.income?Math.min(120*S.u.income,1000000):500000;
-  const age=S.u.dob?getAge(S.u.dob):35;
-  S.q.term=Math.max(10,Math.min(30,65-Math.round(age)));
-}
+    S.q.cover=S.u.income?Math.min(120*S.u.income,1000000):500000;
+    const age=S.u.dob?getAge(S.u.dob):35;
+    S.q.term=Math.max(10,Math.min(30,65-Math.round(age)));
+  }
   else{S.q.premium=S.u.income?Math.max(100,Math.min(10000,Math.round(S.u.income*0.1))):500;S.q.term=10;S.q.fund='balanced';}
   const planCard=G('plan_card');
   if(planCard&&!planCard.classList.contains('done'))lockCard('plan_card');
@@ -595,7 +606,7 @@ async function handlePassportVerified(){
   if(S.stage==='medical_done')S.stage='doc_uploaded';
   await delay(400);
   const resp=await callAPI('Passport has been verified — please continue the journey');
-  addBot(resp.message);
+  if(resp.message&&resp.message.trim())if(resp.message&&resp.message.trim())addBot(resp.message);
   await executeAction(resp.action);
 }
 
@@ -614,14 +625,14 @@ async function sendUserMsg(){
   let resp;
   if(hasFile){const file=_attachFile;clearAttachment();resp=await callAPI(text||"I've shared a document — please analyse it",{base64:file.base64,mediaType:file.mediaType});}
   else{resp=await callAPI(text);}
-  addBot(resp.message);
+  if(resp.message&&resp.message.trim())if(resp.message&&resp.message.trim())addBot(resp.message);
   await executeAction(resp.action);
   S.busy=false;setActive(true);
 }
 
 async function sendAction(displayMsg,apiMsg){
   if(S.busy)return;S.busy=true;setActive(false);addUser(displayMsg);
-  const resp=await callAPI(apiMsg||displayMsg);addBot(resp.message);await executeAction(resp.action);
+  const resp=await callAPI(apiMsg||displayMsg);if(resp.message&&resp.message.trim())if(resp.message&&resp.message.trim())addBot(resp.message);await executeAction(resp.action);
   S.busy=false;setActive(true);
 }
 
@@ -648,7 +659,10 @@ async function pickPlan(plan){
   const sel=card.querySelector(`[onclick*="${plan}"]`);if(sel)sel.classList.add('sel');
   lockCard('plan_card');S.u.plan=plan;S.stage='plan_selected';
   const labels={protection:'Protect my family — pure life cover',investment:'Grow my wealth — investment with life cover',savings:'Save for a rainy day — guaranteed savings'};
-  await sendAction(labels[plan],`I've selected the ${plan} plan — please proceed`);
+  addUser(labels[plan]);
+  await delay(400);
+  renderInfoForm();
+  setActive(true);
 }
 
 // ── Info form ──
@@ -709,14 +723,15 @@ async function submitInfo(){
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){G('f_email').classList.add('err');err=true;}else G('f_email').classList.remove('err');
   if(!validDOB(dob)){G('f_dob').classList.add('err');err=true;}else G('f_dob').classList.remove('err');
   if(!inc){G('f_inc').classList.add('err');err=true;}else G('f_inc').classList.remove('err');
+  const wasSilent=_silentConfirm;_silentConfirm=false;
   if(err)return;
   S.u={...S.u,name,email,dob,income:inc};const age=getAge(dob);
   if(S.u.plan==='protection'){S.q.cover=Math.min(120*inc,1000000);S.q.term=Math.max(10,Math.min(30,65-Math.round(getAge(dob))));}
   else{S.q.premium=Math.max(100,Math.min(10000,Math.round(inc*0.1)));S.q.term=10;}
   lockCard('info_card');S.stage='info_collected';S.busy=true;setActive(false);
-  if(!_silentConfirm)addUser('Details submitted'); _silentConfirm=false;
+  if(!wasSilent)addUser('Details submitted');
   const resp=await callAPI(`Details submitted — Name="${name}", DOB=${dob} (age ${age}), Gender=${S.u.gender}, Income=$${inc}/mo, Smoker=${S.u.smoker?'yes':'no'}, Plan: ${S.u.plan}`);
-  addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
+  if(resp.message&&resp.message.trim())if(resp.message&&resp.message.trim())if(resp.message&&resp.message.trim())addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
 // ── Protection quote ──
@@ -745,10 +760,11 @@ function upProtQ(){
 }
 async function acceptProtQ(){
   const {cover,term}=S.q,mp=calcProtPremium(cover,getAge(S.u.dob),term,S.u.smoker,S.u.gender);
+  const wasSilent=_silentConfirm;_silentConfirm=false;
   S.q.premium=mp;lockCard('prot_card');S.stage='quote_accepted';S.busy=true;setActive(false);
-  if(!_silentConfirm)addUser(`Protection plan confirmed — ${fmt(cover)} cover, ${term}-year term, ${fmt(mp)}/month`); _silentConfirm=false;
+  if(!wasSilent)addUser(`Protection plan confirmed — ${fmt(cover)} cover, ${term}-year term, ${fmt(mp)}/month`);
   const resp=await callAPI(`I've accepted the Protection Plan — cover: ${fmt(cover)}, term: ${term} years, premium: ${fmt(mp)}/month — please show me the policy illustration`);
-  addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
+  if(resp.message&&resp.message.trim())if(resp.message&&resp.message.trim())if(resp.message&&resp.message.trim())addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
 // ── Savings quote ──
@@ -775,10 +791,11 @@ function upSavQ(){
   G('sv_pv').textContent=fmt(prem);G('sv_tv').textContent=term+' years';G('sv_cv').textContent=fmt(cover);G('sv_mv').textContent=fmt(calcSavMaturity(prem,term));G('sv_tp').textContent=fmt(prem*term*12);G('sv_ts').textContent=`over ${term} years`;
 }
 async function acceptSavQ(){
-  const {premium,term}=S.q;lockCard('sav_card');S.stage='quote_accepted';S.busy=true;setActive(false);
-  if(!_silentConfirm)addUser(`Savings plan confirmed — ${fmt(premium)}/month, ${term}-year term`); _silentConfirm=false;
+  const {premium,term}=S.q;const wasSilent=_silentConfirm;_silentConfirm=false;
+  lockCard('sav_card');S.stage='quote_accepted';S.busy=true;setActive(false);
+  if(!wasSilent)addUser(`Savings plan confirmed — ${fmt(premium)}/month, ${term}-year term`);
   const resp=await callAPI(`I've accepted the savings plan — premium: ${fmt(premium)}/month, term: ${term} years — please show me the illustration`);
-  addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
+  if(resp.message&&resp.message.trim())if(resp.message&&resp.message.trim())addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
 // ── Investment quote ──
@@ -816,10 +833,11 @@ function upInvQ(){
 }
 async function acceptInvQ(){
   const {premium,term,fund}=S.q,mat=calcInvMaturity(premium,term,fund);
+  const wasSilent=_silentConfirm;_silentConfirm=false;
   lockCard('inv_card');S.stage='quote_accepted';S.busy=true;setActive(false);
-  if(!_silentConfirm)addUser(`Investment plan confirmed — ${fmt(premium)}/month, ${term} yrs, ${FUNDS[fund].label} Fund`); _silentConfirm=false;
+  if(!wasSilent)addUser(`Investment plan confirmed — ${fmt(premium)}/month, ${term} yrs, ${FUNDS[fund].label} Fund`);
   const resp=await callAPI(`I've accepted the investment plan — premium: ${fmt(premium)}/month, term: ${term} years, fund: ${FUNDS[fund].label} (${FUNDS[fund].rate}%), projected maturity: ${fmt(mat)} — please show the illustration`);
-  addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
+  if(resp.message&&resp.message.trim())if(resp.message&&resp.message.trim())if(resp.message&&resp.message.trim())addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
 // ── Illustration ──
@@ -839,10 +857,11 @@ function renderIllustration(){
   </div>`);
 }
 async function agreeIll(){
+  const wasSilent=_silentConfirm;_silentConfirm=false;
   lockCard('ill_card');S.stage='illustration_agreed';S.busy=true;setActive(false);
-  if(!_silentConfirm)addUser('Policy illustration agreed'); _silentConfirm=false;
+  if(!wasSilent)addUser('Policy illustration agreed');
   const resp=await callAPI("I've reviewed and agreed to the policy illustration — please proceed to the medical questionnaire");
-  addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
+  if(resp.message&&resp.message.trim())if(resp.message&&resp.message.trim())if(resp.message&&resp.message.trim())addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
 // ── Medical ──
@@ -868,12 +887,15 @@ function calcBMI(){
 }
 function setRb(key,val,btn){btn.parentElement.querySelectorAll('.rb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');S.medVals[key]=val;}
 async function submitMed(){
-  const h=G('m_h').value||'—',w=G('m_w').value||'—',mv=S.medVals;
+  const wasSilent=_silentConfirm;_silentConfirm=false;
+  const h=G('m_h').value,w=G('m_w').value;
+  if(!h||!w){addBot("Please enter your height and weight before submitting the medical form");return;}
+  const mv=S.medVals;
   lockCard('med_card');S.stage='medical_done';S.busy=true;setActive(false);
-  if(!_silentConfirm)addUser('Medical information submitted'); _silentConfirm=false;
+  if(!wasSilent)addUser('Medical information submitted');
   const summary=`Height:${h}cm, Weight:${w}kg, Alcohol:${mv.alc}, Chronic conditions:${mv.cc}, Hospitalised:${mv.hosp}, Medication:${mv.medic}, Family history:${mv.fhist}, Hazardous activities:${mv.haz}`;
   const resp=await callAPI(`Medical questionnaire complete — ${summary} — please ask the user to share their passport in the chat for identity verification`);
-  addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
+  if(resp.message&&resp.message.trim())if(resp.message&&resp.message.trim())if(resp.message&&resp.message.trim())addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
 // ── Signature ──
@@ -944,7 +966,7 @@ async function submitPay(fmtAmt){
   G('pay_card').classList.add('done');S.stage='paid';S.busy=true;setActive(false);
   addUser(`Payment of ${fmtAmt} processed`);
   const resp=await callAPI(`Payment was successful — please show the nominee collection screen now`);
-  addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
+  if(resp.message&&resp.message.trim())if(resp.message&&resp.message.trim())addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
 // ── Nominees ──
@@ -1022,6 +1044,18 @@ function checkNoms(){
   G('nom_btn').disabled=!ok;
 }
 
+function handlePrefillNominee(nominees){
+  if(!G('nom_card')||!nominees?.length)return;
+  G('nom_rows').innerHTML='';_nomIdx=0;G('nom_add').style.display='';
+  nominees.forEach(n=>{
+    const idx=_nomIdx;
+    addNomRow(n.share??Math.floor(100/nominees.length));
+    if(n.name&&G(`nom_n_${idx}`))G(`nom_n_${idx}`).value=n.name;
+    const sel=G(`nom_r_${idx}`);
+    if(sel&&n.relationship)[...sel.options].forEach(o=>{if(o.value.toLowerCase()===n.relationship.toLowerCase())sel.value=o.value;});
+  });
+  checkNoms();G('nom_card').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
 async function submitNominee(){
   const nominees=[];
   G('nom_rows').querySelectorAll('.nom-row').forEach(row=>{
@@ -1032,7 +1066,7 @@ async function submitNominee(){
   lockCard('nom_card');S.stage='nominee_done';S.busy=true;setActive(false);
   addUser('Nominees confirmed — '+nominees.map(n=>`${n.name} (${n.relationship}) ${n.share}%`).join(' · '));
   const resp=await callAPI('Nominees confirmed — please show the final confirmation screen');
-  addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
+  if(resp.message&&resp.message.trim())if(resp.message&&resp.message.trim())if(resp.message&&resp.message.trim())addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
 // ── Confirmation ──
