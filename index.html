@@ -17,7 +17,7 @@
 html{height:100%;-webkit-tap-highlight-color:transparent}
 body{height:100%;background:var(--bg);color:var(--tx);font-family:'Inter',ui-sans-serif,sans-serif;font-size:14px;line-height:1.5;overflow:hidden}
 #app{display:flex;flex-direction:column;height:100dvh;max-width:600px;margin:0 auto}
-#msgs{flex:1;overflow-y:auto;padding:20px 14px 8px;display:flex;flex-direction:column;gap:4px}
+#msgs{flex:1;overflow-y:auto;padding:10px 14px 0;display:flex;flex-direction:column;gap:5px}
 #msgs::-webkit-scrollbar{width:3px}
 #msgs::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px}
 .row{display:flex;align-items:flex-end;gap:8px;animation:pop .22s ease}
@@ -27,12 +27,27 @@ body{height:100%;background:var(--bg);color:var(--tx);font-family:'Inter',ui-san
 .bbl{max-width:80%;padding:12px;border-radius:14px;font-size:14px;line-height:1.6}
 .row:not(.u) .bbl{background:var(--bb);border:1px solid var(--bd);border-bottom-left-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .row.u .bbl{background:var(--a);color:#fff;font-weight:500;border-bottom-right-radius:3px}
-.comp{margin-left:36px;margin-bottom:4px;animation:pop .22s ease;position:relative}
+.comp{margin-left:36px;margin-bottom:5px;animation:pop .22s ease;position:relative}
 #typing{display:none;align-items:flex-end;gap:8px;padding:0 14px 6px}
 .tdots{background:var(--bb);border:1px solid var(--bd);border-radius:14px;border-bottom-left-radius:3px;padding:10px;display:flex;gap:5px;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .tdot{width:6px;height:6px;background:var(--s4);border-radius:50%;animation:bnc 1.2s infinite}
 .tdot:nth-child(2){animation-delay:.2s}.tdot:nth-child(3){animation-delay:.4s}
-#bar{padding:10px 12px;padding-bottom:max(14px,env(safe-area-inset-bottom));background:var(--bg)}
+
+/* ── Panel (sits between msgs and bar) ── */
+#panel{background:var(--s1);border-top:1px solid var(--bd);overflow-y:auto;max-height:55vh;display:none}
+#panel::-webkit-scrollbar{width:3px}
+#panel::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:12px 14px}
+.chip{padding:9px 15px;background:var(--s2);border:1.5px solid var(--bd);border-radius:20px;font:500 13px/1 'Inter',ui-sans-serif,sans-serif;color:var(--t2);cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:7px}
+.chip:hover,.chip.sel{border-color:var(--a);color:var(--ad);background:var(--aa)}
+.pnl{padding:14px 14px 4px}
+.pnl-hd{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.pnl-row{margin-bottom:10px}
+.pnl-sub{width:100%;padding:12px;background:var(--a);color:#fff;border:none;border-radius:11px;font:700 13px 'Inter',ui-sans-serif,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .2s;margin-bottom:10px}
+.pnl-sub:hover{background:var(--ad)}
+.pnl-sub:disabled{background:var(--s4);color:var(--t3);cursor:default}
+
+#bar{padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom));background:var(--bg)}
 #attach-preview{display:none;align-items:center;gap:8px;margin-bottom:6px}
 .attach-chip{display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:7px;flex:1;min-width:0}
 #attach-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--t2)}
@@ -55,14 +70,6 @@ body{height:100%;background:var(--bg);color:var(--tx);font-family:'Inter',ui-san
 .card-overlay-pill{display:flex;align-items:center;gap:7px;background:#fff;border:1.5px solid #D5DAF0;border-radius:20px;padding:9px 16px}
 .card-overlay-txt{font-size:12px;font-weight:600;color:#1C2237}
 .ctag{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ad);margin-bottom:13px;display:flex;align-items:center;gap:6px}
-.ctag-note{font-weight:400;letter-spacing:0;text-transform:none;color:var(--t3);font-style:italic}
-.plans{display:flex;flex-direction:column;gap:9px}
-.po{display:flex;align-items:center;gap:12px;background:var(--s2);border:1.5px solid var(--bd);border-radius:12px;padding:13px;cursor:pointer;text-align:left;width:100%;transition:border-color .2s,background .2s}
-.po:hover,.po.sel{border-color:var(--a);background:var(--aa)}
-.po-ic{width:34px;height:34px;border-radius:9px;background:var(--aa);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--a);transition:background .2s}
-.po:hover .po-ic,.po.sel .po-ic{background:rgba(11,175,136,.18)}
-.pot{font-size:14px;font-weight:600;color:var(--tx)}
-.pos{font-size:12px;color:var(--t2);margin-top:2px}
 .flds{display:flex;flex-direction:column;gap:9px}
 .fi{width:100%;background:var(--s2);border:1.5px solid var(--bd);border-radius:9px;padding:11px;color:var(--tx);font:inherit;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none}
 .fi:focus{border-color:var(--a)}.fi.err{border-color:var(--red)}
@@ -113,7 +120,6 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .ilt tr.tot td{font-weight:700;color:var(--a);border-top:1px solid var(--bd);border-bottom:none}
 .decl{display:flex;gap:9px;align-items:flex-start;font-size:12px;color:var(--t2);line-height:1.55;cursor:pointer;margin:13px 0 3px}
 .decl input{accent-color:var(--a);width:14px;height:14px;flex-shrink:0;margin-top:2px}
-.mq{margin-bottom:13px}
 .ml{font-size:12px;color:var(--t2);font-weight:500;margin-bottom:7px;display:block}
 .rg{display:flex;gap:7px}
 .rb{flex:1;padding:9px;text-align:center;background:var(--s2);border:1.5px solid var(--bd);border-radius:8px;font:12px 'Inter',ui-sans-serif,sans-serif;color:var(--t2);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
@@ -129,12 +135,6 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .payamt{display:flex;justify-content:space-between;align-items:center;background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:12px;margin-bottom:12px}
 .payamt-l{font-size:11px;color:var(--t2)}
 .payamt-v{font-size:18px;font-weight:700;color:var(--a)}
-.conf{text-align:center;padding:14px 0}
-.cico{width:56px;height:56px;border-radius:50%;background:var(--aa);border:2px solid var(--a);display:grid;place-items:center;margin:0 auto 14px;color:var(--a)}
-.cico svg{width:24px;height:24px}
-.ch{font-size:17px;font-weight:700;margin-bottom:10px}
-.cp{font-size:13px;color:var(--t2);line-height:1.7}
-.ce{color:var(--a);font-weight:500}
 .nom-row{padding-bottom:13px;margin-bottom:13px;border-bottom:1px solid var(--bd)}
 .nom-row:last-child{border-bottom:none;padding-bottom:0;margin-bottom:0}
 .nom-spl{display:flex;gap:9px;margin-top:9px;align-items:center}
@@ -160,6 +160,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     <div class="av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
     <div class="tdots"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>
   </div>
+  <div id="panel"></div>
   <div id="bar">
     <div id="attach-preview">
       <div class="attach-chip">
@@ -185,7 +186,6 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 const ic = {
   arrow:    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`,
   check:    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 20 4 14"/></svg>`,
-  checkLg:  `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 20 4 14"/></svg>`,
   shield:   `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
   trending: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
   savings:  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7 12 2"/></svg>`,
@@ -220,7 +220,10 @@ const S = {
 let _attachFile = null;
 
 const G = id => document.getElementById(id);
-const msgs=G('msgs'),inp=G('inp'),snd=G('snd'),typing=G('typing');
+const msgs=G('msgs'),inp=G('inp'),snd=G('snd');
+function showPanel(html){ const p=G('panel'); p.innerHTML=html; p.style.display='block'; scroll(); }
+function hidePanel(){ const p=G('panel'); p.style.display='none'; p.innerHTML=''; }
+
 const fmt = n => '$'+Math.round(n).toLocaleString('en-US');
 const delay = ms => new Promise(r=>setTimeout(r,ms));
 
@@ -239,22 +242,18 @@ function calcProtPremium(cover,age,term,smoker,gender){
   if(smoker)annual*=1.35; if(gender==='female')annual*=0.85;
   return Math.max(5,Math.ceil(annual/12));
 }
-
 function calcSavMaturity(premium,term){
   const r=0.01/12; let fv=0;
   for(let i=0;i<term*12;i++)fv=(fv+premium)*(1+r);
   return Math.round(fv);
 }
-
 function calcInvMaturity(premium,term,fundKey){
   const r=FUNDS[fundKey].rate/100/12; let fv=0;
   for(let y=1;y<=term;y++){for(let m=0;m<12;m++)fv=(fv+premium)*(1+r);fv*=0.99;}
   return Math.round(fv);
 }
-
 function calcSurrenderValue(mat,year,term){
-  const factor=1-Math.pow(1-year/term,2);
-  return Math.round(mat*factor);
+  return Math.round(mat*(1-Math.pow(1-year/term,2)));
 }
 
 function buildIllustration(){
@@ -264,26 +263,27 @@ function buildIllustration(){
     for(let y=1;y<=term;y++){totalPaid+=mp*12;rows.push({y,age:age+y,paid:totalPaid,cover,mat:null});}
   }else if(plan==='savings'){
     const r=0.01/12;let fv=0,totalPaid=0;
-    for(let y=1;y<=term;y++){for(let m=0;m<12;m++){fv=(fv+premium)*(1+r);totalPaid+=premium;}const svS=calcSurrenderValue(Math.round(fv),y,term);rows.push({y,age:age+y,paid:totalPaid,cover:Math.min(120*premium,1e6),mat:Math.round(fv),sv:svS});}
+    for(let y=1;y<=term;y++){for(let m=0;m<12;m++){fv=(fv+premium)*(1+r);totalPaid+=premium;}rows.push({y,age:age+y,paid:totalPaid,cover:Math.min(120*premium,1e6),mat:Math.round(fv),sv:calcSurrenderValue(Math.round(fv),y,term)});}
   }else if(plan==='investment'){
     const r=FUNDS[fund].rate/100/12;let fv=0,totalPaid=0;
-    for(let y=1;y<=term;y++){for(let m=0;m<12;m++){fv=(fv+premium)*(1+r);totalPaid+=premium;}fv*=0.99;const svI=calcSurrenderValue(Math.round(fv),y,term);rows.push({y,age:age+y,paid:totalPaid,cover:Math.min(120*premium,1e6),mat:Math.round(fv),sv:svI});}
+    for(let y=1;y<=term;y++){for(let m=0;m<12;m++){fv=(fv+premium)*(1+r);totalPaid+=premium;}fv*=0.99;rows.push({y,age:age+y,paid:totalPaid,cover:Math.min(120*premium,1e6),mat:Math.round(fv),sv:calcSurrenderValue(Math.round(fv),y,term)});}
   }
   return rows;
 }
 
-// ── Card locking + editing ──
+// ── Card locking + editing (DOM cards only: prot/sav/inv/ill/sig) ──
 const STAGE_MAP={
-  plan_card:'start', info_card:'plan_selected',
   prot_card:'info_collected', sav_card:'info_collected', inv_card:'info_collected',
-  ill_card:'quote_accepted', med_card:'illustration_agreed', sig_card:'doc_uploaded',
-  nom_card:'paid'
+  ill_card:'quote_accepted', sig_card:'doc_uploaded',
+  // panel-based — kept so editCard can route them correctly
+  plan_card:'start', info_card:'plan_selected', med_card:'illustration_agreed'
 };
 
 function lockCard(id){
-  G(id).classList.add('done');
+  const el=G(id); if(!el)return;
+  el.classList.add('done');
   if(S.activeCard===id)S.activeCard=null;
-  const comp=G(id).closest('.comp');
+  const comp=el.closest('.comp');
   if(!comp.querySelector('.card-overlay')){
     const ov=document.createElement('div');ov.className='card-overlay';
     ov.innerHTML=`<div class="card-overlay-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1C2237" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><span class="card-overlay-txt">Double-click to edit</span></div>`;
@@ -296,10 +296,13 @@ function lockCard(id){
 }
 
 function editCard(id,resetStage,force=false){
-  const card=G(id);if(!card||(S.busy&&!force))return;
-  if(id==='plan_card'){S.u={name:'',email:'',dob:'',gender:'male',income:0,smoker:false,plan:''};S.nameMatched=false;S.medVals={alc:'none',cc:'no',hosp:'no',medic:'no',fhist:'no',haz:'no'};S.nominees=[];}
-  card.classList.remove('done');
-  const ov=card.closest('.comp')?.querySelector('.card-overlay');if(ov)ov.remove();
+  if(S.busy&&!force)return;
+  if(id==='plan_card'){
+    S.u={name:'',email:'',dob:'',gender:'male',income:0,smoker:false,plan:''};
+    S.nameMatched=false;
+    S.medVals={alc:'none',cc:'no',hosp:'no',medic:'no',fhist:'no',haz:'no'};
+    S.nominees=[];
+  }
   const sentinel=msgs.querySelector(`[data-sentinel="${id}"]`);
   if(sentinel){
     const cl=parseInt(sentinel.dataset.convLen);
@@ -307,12 +310,23 @@ function editCard(id,resetStage,force=false){
     while(sentinel.nextSibling)sentinel.nextSibling.remove();
     sentinel.remove();
   }
-  if(id==='ill_card'){const chk=G('ill_chk');if(chk){chk.checked=false;G('ill_btn').disabled=true;}}
-  if(id==='sig_card')clearSig();
-  if(id==='info_card')setTimeout(checkInfo,50);
-  S.activeCard=id;
-  S.stage=resetStage; S.busy=false; setActive(true);
-  card.scrollIntoView({behavior:'smooth',block:'nearest'});
+  const card=G(id);
+  if(card){
+    // DOM card (quotes, illustration, signature)
+    card.classList.remove('done');
+    const ov=card.closest('.comp')?.querySelector('.card-overlay');if(ov)ov.remove();
+    if(id==='ill_card'){const chk=G('ill_chk');if(chk){chk.checked=false;G('ill_btn').disabled=true;}}
+    if(id==='sig_card')clearSig();
+    S.activeCard=id; S.stage=resetStage; S.busy=false; setActive(true);
+    card.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }else{
+    // Panel-based forms
+    S.activeCard=id; S.stage=resetStage; S.busy=false; setActive(true);
+    hidePanel();
+    if(id==='plan_card') renderPlans();
+    else if(id==='info_card'){renderInfoForm();setTimeout(()=>{if(S.u.name)prefillInfoCard(S.u);},50);}
+    else if(id==='med_card') renderMedical();
+  }
 }
 
 let _lastTapCard=null,_lastTapTime=0;
@@ -321,7 +335,6 @@ msgs.addEventListener('dblclick',e=>{
   if(!card||!STAGE_MAP[card.id])return;
   editCard(card.id,STAGE_MAP[card.id]);
 });
-
 msgs.addEventListener('touchend',e=>{
   const card=e.target.closest('.card.done');
   if(!card||!STAGE_MAP[card.id])return;
@@ -357,14 +370,14 @@ VALID ACTION TYPES (choose exactly one):
 - show_medical         → medical questionnaire
 - show_signature       → digital signature pad
 - select_plan          → select a plan; data: {"plan":"protection"|"savings"|"investment"}
-- prefill_info         → pre-fill info card from conversation or document; data: {"name":"","email":"","dob":"DD/MM/YYYY","gender":"male|female","income":0,"smoker":false} — include only known fields
+- prefill_info         → pre-fill info form from conversation or document; data: {"name":"","email":"","dob":"DD/MM/YYYY","gender":"male|female","income":0,"smoker":false} — include only known fields
 - prefill_quote        → adjust active quote card sliders; data: {"cover":0,"term":0,"premium":0,"fund":"aggressive|balanced|passive"} — include only known fields
-- prefill_medical      → pre-fill medical card; data: {"height":0,"weight":0,"alc":"none|occasional|regular","cc":"yes|no","hosp":"yes|no","medic":"yes|no","fhist":"yes|no","haz":"yes|no"} — include only known fields
+- prefill_medical      → pre-fill medical form; data: {"height":0,"weight":0,"alc":"none|occasional|regular","cc":"yes|no","hosp":"yes|no","medic":"yes|no","fhist":"yes|no","haz":"yes|no"} — include only known fields
 - confirm_active_card  → programmatically confirm the active card — never use for plan_card, nom_card, sig_card or pay_card
 - passport_verified         → emit when passport name is confirmed to match the application name "${u.name}"
-- reset_to_plan_selection   → emit when user wants to change plan but hasn't specified which — returns them to the plan selector card
+- reset_to_plan_selection   → emit when user wants to change plan but hasn't specified which — returns them to the plan selector
 - show_nominee              → collect beneficiary/nominee details after payment
-- prefill_nominee           → pre-fill beneficiary card from conversation; data: [{"name":"","relationship":"Spouse|Child|Parent|Sibling|Other","share":0}] — shares must total 100; only emit after show_nominee has rendered the card
+- prefill_nominee           → pre-fill beneficiary form from conversation; data: [{"name":"","relationship":"Spouse|Child|Parent|Sibling|Other","share":0}] — shares must total 100; only emit after show_nominee has rendered
 
 PLAN TERMINOLOGY — map these to the correct plan type:
 - protection: "term plan", "term insurance", "term life", "pure protection", "pure life cover"
@@ -378,15 +391,15 @@ If the user expresses a clear plan preference in natural language at any stage:
 
 DOCUMENT HANDLING — behaviour varies by stage:
 
-At info card stage (stage="plan_selected" or info card active and not yet submitted):
+At info form stage (stage="plan_selected" or info form active and not yet submitted):
 - Government-issued photo ID (passport, driving licence, national ID, residence permit) + passportVerified false:
-  State exactly which fields you extracted and which are still missing ("Found your name [X], date of birth [Y], and gender [Z] — filling those in now; you'll still need to add email and income"); emit prefill_info with all extractable fields; one message only
+  State exactly which fields you extracted and which are still missing; emit prefill_info with all extractable fields; one message only
 - Government-issued photo ID + passportVerified already true: acknowledge briefly; action none
 - Insurance document / quotation:
-  Identify the insurer and map the plan type to Life Guard equivalent (term/pure protection → protection; endowment/money-back → savings; ULIP/unit-linked → investment)
-  If plan type differs from S.u.plan: note what the document is and the mismatch; offer two explicit options — (a) compare the two plan types, (b) switch selection to the matching Life Guard plan; action none — await choice
+  Identify the insurer and map the plan type to Life Guard equivalent
+  If plan type differs from S.u.plan: note the mismatch; offer two explicit options — compare the two plan types, or switch to the matching Life Guard plan; action none
   If plan type matches S.u.plan: acknowledge, offer to compare against Life Guard once details are filled; action none
-- Any other document (CV, resume, bank statement, etc.): state what the document is; emit prefill_info if any personal fields (name, email, DOB) are visible and state exactly what you extracted; do NOT mention policy comparison; action none if nothing extractable
+- Any other document: state what the document is; emit prefill_info if any personal fields are visible; do NOT mention policy comparison; action none if nothing extractable
 
 At medical_done stage (passportVerified false):
 - Government-issued photo ID: verify extracted name matches "${u.name}" — if match emit passport_verified; if mismatch tell the user clearly
@@ -394,64 +407,53 @@ At medical_done stage (passportVerified false):
 At all other stages:
 - Government-issued photo ID + passportVerified false: verify name matches "${u.name}" — if match emit passport_verified; if mismatch tell the user clearly
 - Government-issued photo ID + passportVerified already true: acknowledge and continue
-- Insurance document: run a structured comparison:
-  1. Extract: insurer, plan type, sum assured, monthly premium, policy term remaining, key features, visible exclusions
-  2. Compare against Life Guard best-fit plan or active journey plan:
-     · Sum assured: which is higher and by how much
-     · Monthly cost: which is cheaper and by how much
-     · Plan type: like-for-like or different types — explain the difference if so
-     · Term: years remaining on existing policy vs fresh start
-     · Portability: is the existing policy group/employer-tied?
-  3. Give an honest verdict — if the existing policy is genuinely better value, say so clearly; do not oversell Life Guard
-  4. If plan type differs and user wants a proper comparison: emit select_plan with the detected type
-  5. If user decides to proceed with Life Guard: continue the journey normally
+- Insurance document: run a structured comparison (insurer, plan type, sum assured, monthly premium, term, key features, exclusions; compare against Life Guard; give honest verdict)
 - Any other document type: acknowledge, note it cannot be used in this context, redirect to current journey step; action none
 
-JOURNEY LOGIC — cards are the confirmation gates; guide the user to each one through conversation:
-- Stage "plan_selected": if user details are unknown emit show_info_form; if details are already known from conversation emit prefill_info directly — it renders the form automatically
+JOURNEY LOGIC — guide the user through conversation:
+- Stage "plan_selected": if user details are unknown emit show_info_form; if details are already known from conversation emit prefill_info directly
 - Stage "info_collected": DO NOT show the quote immediately — first run a brief needs assessment in one message:
   Ask: (1) any outstanding mortgage or total loans, (2) number of financial dependents, (3) any existing personal life insurance with sum assured and years remaining
   Note: employer/group insurance is NOT personal coverage — flag this if mentioned
-  Once answered or skipped: emit show_${u.plan||'[plan]'}_quote with data.cover set to the adjusted cover:
+  Once answered or skipped: emit show_${u.plan||'[plan]'}_quote with adjusted cover
   Adjusted cover = min(max(10 × income × 12 + outstanding_loans − existing_personal_cover, 50000), 1000000)
-  Briefly explain the number: "this replaces your income for 10 years, covers your loans, and accounts for your existing policy"
+  Briefly explain the number
   If user skips: emit show_${u.plan||'[plan]'}_quote with no data — default cover applies
-  If mortgage/loan, dependent and existing coverage information was already given earlier in the conversation: skip the assessment entirely and emit the quote action directly with the adjusted cover
 - Stage "quote_accepted": trigger show_illustration
 - Stage "illustration_agreed": emit show_medical; on the following turn if medical info is known emit prefill_medical
-- Stage "medical_done" + passportVerified false: ask user to share a government-issued photo ID (passport, driving licence, national ID, or residence permit) via the paperclip button — action none
-- If user wants to change plan but hasn't specified which one: first warn that current progress will be cleared and ask if they want to proceed (action none) — only emit reset_to_plan_selection on the next turn if the user confirms
+- Stage "medical_done" + passportVerified false: ask user to share a government-issued photo ID via the paperclip button — action none
+- If user wants to change plan but hasn't specified which one: first warn (action none) — only emit reset_to_plan_selection on next turn if user confirms
 - Stage "doc_uploaded": trigger show_signature
-- Stage "paid": trigger show_nominee; if nominee information is already known from conversation emit prefill_nominee on the following turn
+- Stage "paid": trigger show_nominee; if nominee information is already known emit prefill_nominee on the following turn
 
 CONFIRMATION DETECTION — when activeCard is set and is not plan_card, nom_card, sig_card or pay_card:
 Priority rule — check your immediately preceding message first:
 - If it contained ANY yes/no question → treat "yes", "no", "yeah", "nope" and similar as answering that question; do NOT emit confirm_active_card regardless of activeCard
 - If it contained NO question AND the user's message consists solely of a confirmation word (yes, sure, ok, proceed, go ahead, looks good, that's right, fine, yep, absolutely) → emit confirm_active_card
-- If the user's message contains a confirmation AND a question or qualifier ("yes but what does surrender value mean?") → answer the question; action none
-- plan_card active: tell the user to pick from the plan options on the card above
+- If the user's message contains a confirmation AND a question or qualifier → answer the question; action none
+- plan_card active: tell the user to pick from the plan options above the chat bar
 - sig_card active: tell the user to draw their signature on the canvas
-- pay_card active: tell the user to fill in their card details
+- pay_card active: tell the user to fill in their card details in the panel above
 
 SENSITIVE SCENARIOS:
-- Recent bereavement mentioned: acknowledge the loss warmly and pause the journey — do not push plan selection until the user signals they are ready to continue; when they do signal readiness, pick up exactly where you left off without repeating completed steps
-- User mentions a serious or terminal diagnosis: express empathy; note that pre-existing conditions must be disclosed on the medical form and may affect coverage terms; do not proceed without their acknowledgment
-- Affordability: for savings and investment plans the premium is known before showing the quote — if it exceeds 20% of income flag the concern and suggest adjusting before emitting show_*_quote; for protection plans the premium is only known at acceptance — if the accepted premium exceeds 20% of income, acknowledge the acceptance, flag the concern, suggest adjusting cover or term, and wait for explicit confirmation before emitting show_illustration; action none until they confirm
-- User expresses anxiety about discussing death or mortality: gently reframe — the policy is an act of love and care for the people who depend on them, not a prediction
-- User mentions they cannot afford much: help them find the minimum viable coverage rather than defaulting to 120× income
+- Recent bereavement mentioned: acknowledge the loss warmly and pause the journey
+- User mentions a serious or terminal diagnosis: express empathy; note pre-existing conditions must be disclosed
+- Affordability: flag if premium exceeds 20% of income
+- User expresses anxiety about discussing death: gently reframe as an act of love
+- User mentions they cannot afford much: help them find minimum viable coverage
 
 RULES:
-- Set "message" to "" when the user's input is an unambiguous field value (a name, email, date, number, yes/no, or a clear directive matching an option you offered) — execute the action silently; the card updating is the feedback. Only respond with a message when: the card just became fully filled, there is genuine ambiguity, the user asked a question, a problem needs flagging, or your response is itself the deliverable (a comparison, an explanation)
+- Set "message" to "" when the user's input is an unambiguous field value — execute the action silently
 - Keep responses warm and concise (2–3 sentences); never end a sentence or message with a period — drop all terminal punctuation for a casual, conversational feel
 - Never invent premium or maturity numbers — the UI calculates these
-- Emit prefill actions incrementally as each field value is learned — one field at a time is correct; do not wait until all fields are known before prefilling. When ALL required fields for the active card are now known, switch out of silent mode: briefly confirm what was captured and invite the user to submit ("That's everything — press [button label] above, or say confirm"). For document-based prefills, state exactly which fields were extracted and which are still missing
-- Required fields by card — info card: name, email, DOB, income (gender and smoker have defaults so do not block completion); medical card: height and weight (all toggles have defaults); nominee card: at least one nominee with name, relationship, and shares totalling 100%. Once the completion threshold is met, invite confirmation without waiting for the user to prompt you
+- Emit prefill actions incrementally as each field value is learned
+- Required fields by form — info: name, email, DOB, income; medical: height and weight; nominee: at least one nominee with name, relationship, and shares totalling 100%
 - Acknowledge death/disability topics with sensitivity
 - If asked off-topic questions, acknowledge briefly and redirect to insurance
 - Do not re-trigger already-completed stages
-- If the user wants to change something on a card already confirmed, tell them: "You can edit it by double-clicking (desktop) or double-tapping (mobile) on the card" — action none
+- If the user wants to change something on a locked card, tell them: "You can edit it by double-clicking (desktop) or double-tapping (mobile) on the card" — action none
 - For free-form insurance questions use action "none"
-- If user says their employer provides insurance: acknowledge it as a valuable benefit; note it is group coverage tied to their employment — it ends when they change or lose their job, typically covers only 2-4× salary, and cannot be personalised; recommend a personal policy as a portable permanent foundation; end your message with a re-engagement prompt based on current stage — if no plan selected: "Which would suit you better — pure protection, a savings plan, or a market-linked investment?"; if plan selected but quote not yet shown: "Shall I build you a quote on top of your employer coverage?"; action none`;
+- If user says their employer provides insurance: acknowledge it as a valuable benefit; note it is group coverage tied to employment; recommend a personal policy; end with a re-engagement prompt`;
 }
 
 // ── API layer ──
@@ -477,8 +479,7 @@ function parseResp(text){
 }
 
 // ── Chat rendering ──
-function showTyping(show){typing.style.display=show?'flex':'none';scroll();}
-
+function showTyping(show){G('typing').style.display=show?'flex':'none';scroll();}
 function scroll(){setTimeout(()=>msgs.scrollTop=msgs.scrollHeight,60);}
 
 function addBot(text){
@@ -486,13 +487,11 @@ function addBot(text){
   row.innerHTML=`<div class="av">${ic.brand}</div><div class="bbl">${text.replace(/\n/g,'<br>')}</div>`;
   msgs.appendChild(row);scroll();
 }
-
 function addUser(html){
   const row=document.createElement('div');row.className='row u';
   row.innerHTML=`<div class="bbl">${html}</div>`;
   msgs.appendChild(row);scroll();
 }
-
 function addComp(html){
   const div=document.createElement('div');div.className='comp';div.innerHTML=html;
   msgs.appendChild(div);scroll();return div;
@@ -506,7 +505,6 @@ function clearAttachment(){
   G('chat-file').value='';
   snd.disabled=!inp.value.trim()||S.busy;
 }
-
 G('attach-btn').addEventListener('click',()=>G('chat-file').click());
 G('chat-file').addEventListener('change',function(){
   const file=this.files[0];if(!file)return;
@@ -520,7 +518,6 @@ G('chat-file').addEventListener('change',function(){
   };
   reader.readAsDataURL(file);
 });
-
 G('attach-clear').addEventListener('click',clearAttachment);
 
 // ── Flow engine ──
@@ -557,19 +554,15 @@ function handleSelectPlan(data){
     S.q.cover=S.u.income?Math.min(120*S.u.income,1000000):500000;
     const age=S.u.dob?getAge(S.u.dob):35;
     S.q.term=Math.max(10,Math.min(30,65-Math.round(age)));
+  }else{
+    S.q.premium=S.u.income?Math.max(100,Math.min(10000,Math.round(S.u.income*0.1))):500;
+    S.q.term=10;S.q.fund='balanced';
   }
-  else{S.q.premium=S.u.income?Math.max(100,Math.min(10000,Math.round(S.u.income*0.1))):500;S.q.term=10;S.q.fund='balanced';}
-  const planCard=G('plan_card');
-  if(planCard&&!planCard.classList.contains('done')){
-    planCard.querySelectorAll('.po').forEach(b=>b.classList.remove('sel'));
-    const sel=planCard.querySelector(`[onclick*="${plan}"]`);if(sel)sel.classList.add('sel');
-    lockCard('plan_card');
-  }
+  hidePanel();
   if(hadDetails){
     S.medVals={alc:'none',cc:'no',hosp:'no',medic:'no',fhist:'no',haz:'no'};
     S.nominees=[];
     editCard('info_card','plan_selected',true);
-    setTimeout(()=>prefillInfoCard(S.u),50);
   }else{
     S.stage='plan_selected';
     renderInfoForm();
@@ -577,10 +570,8 @@ function handleSelectPlan(data){
 }
 
 function handlePrefillInfo(data){
-  if(!G('info_card'))renderInfoForm();
+  if(!G('f_name'))renderInfoForm();
   prefillInfoCard(data);
-  const comp=G('info_card')?.closest('.comp');
-  if(comp){msgs.appendChild(comp);scroll();}
 }
 
 function handlePrefillQuote(data){
@@ -605,29 +596,38 @@ function handlePrefillQuote(data){
 }
 
 function handlePrefillMedical(data){
-  if(!G('med_card'))return;
+  if(!G('m_h'))return;
   if(data.height)G('m_h').value=data.height;
   if(data.weight)G('m_w').value=data.weight;
   if(data.height&&data.weight)calcBMI();
   ['alc','cc','hosp','medic','fhist','haz'].forEach(f=>{
     if(data[f]===undefined)return;
     S.medVals[f]=data[f];
-    G('med_card').querySelectorAll(`[onclick*="'${f}'"]`).forEach(b=>{
+    G('panel').querySelectorAll(`[onclick*="'${f}'"]`).forEach(b=>{
       b.classList.toggle('on',b.textContent.toLowerCase()===String(data[f]).toLowerCase());
     });
   });
-  const comp=G('med_card').closest('.comp');if(comp){msgs.appendChild(comp);scroll();}
 }
 
 let _silentConfirm=false;
 function handleConfirmActiveCard(){
   const id=S.activeCard;if(!id)return;
   if(id==='sig_card'){addBot("Please draw your signature on the canvas — I can't do that part for you");return;}
-  if(id==='pay_card'){addBot("Please fill in your card details to complete the payment — I can't do that part for you");return;}
-  if(id==='plan_card'){addBot("Please pick a plan from the options above");return;}
-  if(id==='nom_card'){addBot("Please fill in your nominee details above — I can't do that part for you");return;}
+  if(id==='pay_card'){addBot("Please fill in your card details in the panel above to complete payment");return;}
+  if(id==='plan_card'){addBot("Please pick a plan from the options above the chat bar");return;}
+  if(id==='nom_card'){addBot("Please fill in your nominee details in the panel above — I can't do that part for you");return;}
+  if(id==='info_card'){
+    if(G('info_btn')&&!G('info_btn').disabled){_silentConfirm=true;submitInfo();}
+    else addBot("Please complete all required fields in the form above");
+    return;
+  }
+  if(id==='med_card'){
+    if(G('med_btn')&&!G('med_btn').disabled){_silentConfirm=true;submitMed();}
+    else addBot("Please enter your height and weight in the form above");
+    return;
+  }
   if(id==='ill_card'){const chk=G('ill_chk');if(chk){chk.checked=true;if(G('ill_btn'))G('ill_btn').disabled=false;}}
-  const fns={info_card:submitInfo,prot_card:acceptProtQ,sav_card:acceptSavQ,inv_card:acceptInvQ,ill_card:agreeIll,med_card:submitMed};
+  const fns={prot_card:acceptProtQ,sav_card:acceptSavQ,inv_card:acceptInvQ,ill_card:agreeIll};
   if(fns[id]){_silentConfirm=true;fns[id]();}
 }
 
@@ -650,8 +650,6 @@ async function sendUserMsg(){
     :text;
   addUser(bubbleHtml);
   inp.value='';resizeInp();
-
-  // Document or text message
   let resp;
   if(hasFile){const file=_attachFile;clearAttachment();resp=await callAPI(text||"I've shared a document — please analyse it",{base64:file.base64,mediaType:file.mediaType});}
   else{resp=await callAPI(text);}
@@ -663,25 +661,19 @@ async function sendUserMsg(){
 function setActive(v){snd.disabled=(!inp.value.trim()&&!_attachFile)||!v;inp.disabled=!v;}
 function resizeInp(){inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,90)+'px';}
 
-// ── Plan selector ──
+// ── Plan selector — chips in panel ──
 function renderPlans(){
-  if(G('plan_card'))return;
   S.activeCard='plan_card';
-  addComp(`<div class="card" id="plan_card">
-    <div class="ctag">Your goal</div>
-    <div class="plans">
-      <button class="po" onclick="pickPlan('protection')"><span class="po-ic">${ic.shield}</span><span><div class="pot">Protect my family</div><div class="pos">Pure life cover so loved ones are looked after</div></span></button>
-      <button class="po" onclick="pickPlan('investment')"><span class="po-ic">${ic.trending}</span><span><div class="pot">Grow my wealth</div><div class="pos">Long-term investment with life cover built in</div></span></button>
-      <button class="po" onclick="pickPlan('savings')"><span class="po-ic">${ic.savings}</span><span><div class="pot">Save for a rainy day</div><div class="pos">Guaranteed savings with assured protection</div></span></button>
-    </div>
+  showPanel(`<div class="chips">
+    <button class="chip" onclick="pickPlan('protection')">${ic.shield} Protect my family</button>
+    <button class="chip" onclick="pickPlan('investment')">${ic.trending} Grow my wealth</button>
+    <button class="chip" onclick="pickPlan('savings')">${ic.savings} Save for a rainy day</button>
   </div>`);
 }
 
 async function pickPlan(plan){
-  const card=G('plan_card');if(!card||card.classList.contains('done'))return;
-  card.querySelectorAll('.po').forEach(b=>b.classList.remove('sel'));
-  const sel=card.querySelector(`[onclick*="${plan}"]`);if(sel)sel.classList.add('sel');
-  lockCard('plan_card');S.u.plan=plan;S.stage='plan_selected';
+  hidePanel();
+  S.u.plan=plan; S.stage='plan_selected';
   const labels={protection:'Protect my family — pure life cover',investment:'Grow my wealth — investment with life cover',savings:'Save for a rainy day — guaranteed savings'};
   addUser(labels[plan]);
   await delay(400);
@@ -689,34 +681,31 @@ async function pickPlan(plan){
   setActive(true);
 }
 
-// ── Info form ──
+// ── Info form — panel ──
 function renderInfoForm(){
-  if(G('info_card'))return;
+  if(G('f_name'))return;
   S.activeCard='info_card';
-  addComp(`<div class="card" id="info_card">
-    <div class="ctag">Your details <span class="ctag-note">· Honest answers ensure seamless claims</span></div>
-    <div class="flds">
-      <input class="fi" id="f_name" type="text" placeholder="Full name">
-      <input class="fi" id="f_email" type="email" placeholder="Email address">
-      <input class="fi" id="f_dob" type="text" placeholder="Date of birth — DD / MM / YYYY" maxlength="10">
-      <div class="tgr"><span class="tgl">Gender</span><div class="tg"><button class="tb on" onclick="setTg('gender','male',this)">Male</button><button class="tb" onclick="setTg('gender','female',this)">Female</button></div></div>
-      <div class="pfxw"><span class="pfx">USD</span><input class="fi pl" id="f_inc" type="number" min="1" placeholder="Monthly income"></div>
-      <div class="tgr"><span class="tgl">Smoker?</span><div class="tg"><button class="tb" onclick="setTg('smoker','yes',this)">Yes</button><button class="tb on" onclick="setTg('smoker','no',this)">No</button></div></div>
-    </div>
-    <button class="btn" id="info_btn" disabled onclick="submitInfo()">Get my quote ${ic.arrow}</button>
+  showPanel(`<div class="pnl">
+    <div class="pnl-hd">Your details</div>
+    <div class="pnl-row"><input class="fi" id="f_name" type="text" placeholder="Full name"></div>
+    <div class="pnl-row"><input class="fi" id="f_email" type="email" placeholder="Email address"></div>
+    <div class="pnl-row"><input class="fi" id="f_dob" type="text" placeholder="Date of birth — DD / MM / YYYY" maxlength="10"></div>
+    <div class="pnl-row tgr"><span class="tgl">Gender</span><div class="tg"><button class="tb on" onclick="setTg('gender','male',this)">Male</button><button class="tb" onclick="setTg('gender','female',this)">Female</button></div></div>
+    <div class="pnl-row pfxw"><span class="pfx">USD</span><input class="fi pl" id="f_inc" type="number" min="1" placeholder="Monthly income"></div>
+    <div class="pnl-row tgr"><span class="tgl">Smoker?</span><div class="tg"><button class="tb" onclick="setTg('smoker','yes',this)">Yes</button><button class="tb on" onclick="setTg('smoker','no',this)">No</button></div></div>
+    <button class="pnl-sub" id="info_btn" disabled onclick="submitInfo()">Get my quote ${ic.arrow}</button>
   </div>`);
   G('f_dob').addEventListener('input',maskDOB);
-  ['f_name','f_email','f_dob','f_inc'].forEach(id=>G(id).addEventListener('input',checkInfo));
+  ['f_name','f_email','f_dob','f_inc'].forEach(id=>G(id)?.addEventListener('input',checkInfo));
 }
 
 function maskDOB(e){let v=e.target.value.replace(/\D/g,'');if(v.length>2)v=v.slice(0,2)+'/'+v.slice(2);if(v.length>5)v=v.slice(0,5)+'/'+v.slice(5);e.target.value=v.slice(0,10);}
 function setTg(field,val,btn){btn.parentElement.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');if(field==='gender')S.u.gender=val;else S.u.smoker=val==='yes';}
 
 function checkInfo(){
-  const nameOk=G('f_name').value.trim().length>=2;
-  const emailOk=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(G('f_email').value.trim());
-  const dobOk=validDOB(G('f_dob').value);const incOk=Number(G('f_inc').value)>0;
-  G('info_btn').disabled=!(nameOk&&emailOk&&dobOk&&incOk);
+  const nm=G('f_name'),em=G('f_email'),dob=G('f_dob'),inc=G('f_inc'),btn=G('info_btn');
+  if(!nm||!btn)return;
+  btn.disabled=!(nm.value.trim().length>=2&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.value.trim())&&validDOB(dob.value)&&Number(inc.value)>0);
 }
 
 function validDOB(val){if(val.length!==10)return false;const age=getAge(val);return age!==null&&age>=18&&age<=70;}
@@ -729,13 +718,13 @@ function prefillInfoCard(u){
   if(u.income)G('f_inc').value=u.income;
   if(u.gender){
     S.u.gender=u.gender;
-    G('info_card').querySelectorAll('[onclick*="gender"]').forEach(b=>{
+    G('panel').querySelectorAll('[onclick*="gender"]').forEach(b=>{
       b.classList.toggle('on',b.textContent.toLowerCase()===u.gender);
     });
   }
   if(u.smoker!==undefined){
     S.u.smoker=!!u.smoker;
-    G('info_card').querySelectorAll('[onclick*="smoker"]').forEach(b=>{
+    G('panel').querySelectorAll('[onclick*="smoker"]').forEach(b=>{
       b.classList.toggle('on',(b.textContent.toLowerCase()==='yes')===!!u.smoker);
     });
   }
@@ -754,13 +743,13 @@ async function submitInfo(){
   S.u={...S.u,name,email,dob,income:inc};const age=getAge(dob);
   if(S.u.plan==='protection'){S.q.cover=Math.min(120*inc,1000000);S.q.term=Math.max(10,Math.min(30,65-Math.round(getAge(dob))));}
   else{S.q.premium=Math.max(100,Math.min(10000,Math.round(inc*0.1)));S.q.term=10;}
-  lockCard('info_card');S.stage='info_collected';S.busy=true;setActive(false);
-  if(!wasSilent)addUser('Details submitted');
+  hidePanel();S.stage='info_collected';S.busy=true;setActive(false);
+  if(!wasSilent)addUser(`Name: ${name} &nbsp;·&nbsp; ${email}<br>${dob} &nbsp;·&nbsp; ${S.u.gender==='male'?'Male':'Female'} &nbsp;·&nbsp; $${inc.toLocaleString('en-US')}/mo &nbsp;·&nbsp; ${S.u.smoker?'Smoker':'Non-smoker'}`);
   const resp=await callAPI(`Details submitted — Name="${name}", DOB=${dob} (age ${age}), Gender=${S.u.gender}, Income=$${inc}/mo, Smoker=${S.u.smoker?'yes':'no'}, Plan: ${S.u.plan}`);
   if(resp.message&&resp.message.trim())addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
-// ── Protection quote ──
+// ── Protection quote — inline card ──
 function renderProtQuote(){
   if(G('prot_card'))return;
   S.activeCard='prot_card';
@@ -795,7 +784,7 @@ async function acceptProtQ(){
   if(resp.message&&resp.message.trim())addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
-// ── Savings quote ──
+// ── Savings quote — inline card ──
 function renderSavQuote(){
   if(G('sav_card'))return;
   S.activeCard='sav_card';
@@ -828,7 +817,7 @@ async function acceptSavQ(){
   if(resp.message&&resp.message.trim())addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
-// ── Investment quote ──
+// ── Investment quote — inline card ──
 function renderInvQuote(){
   if(G('inv_card'))return;
   S.activeCard='inv_card';
@@ -845,7 +834,7 @@ function renderInvQuote(){
       <div class="fnd" onclick="pickFund('passive',this)"><div class="fn">PASSIVE</div><div class="fr">4.96%</div><div class="fs">30% Eq / 70% Debt</div></div>
     </div>
     <div class="qdiv"></div>
-    <div class="qrow"><div><div class="ql">Life cover</div><div class="qv" id="iv_cv">${fmt(cover)}</div></div><div style="text-align:right"><div class="ql">Projected maturity</div><div class="qv" id="iv_mv">${fmt(mat)}</div><div class="qs" id="iv_ms">after ${term} yrs · Balanced</div></div></div>
+    <div class="qrow"><div><div class="ql">Life cover</div><div class="qv" id="iv_cv">${fmt(cover)}</div></div><div style="text-align:right"><div class="ql">Projected maturity</div><div class="qv" id="iv_mv">${fmt(mat)}</div><div class="qs" id="iv_ms">after ${term} yrs · ${FUNDS[fund].label}</div></div></div>
     <div class="qrow"><div><div class="ql">Total premiums</div><div class="qv" id="iv_tp">${fmt(prem*term*12)}</div></div></div>
     <div class="qdiv"></div>
     <div class="feat" style="margin-bottom:10px">${ic.check} We continue paying your premiums for the entirety of the policy term in case you are diagnosed with a terminal illness, become disabled, or in the event of your death (we didn't want to mention this, but such is the nature of this conversation)</div>
@@ -873,7 +862,7 @@ async function acceptInvQ(){
   if(resp.message&&resp.message.trim())addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
-// ── Illustration ──
+// ── Illustration — inline card ──
 function renderIllustration(){
   if(G('ill_card'))return;
   S.activeCard='ill_card';
@@ -898,27 +887,27 @@ async function agreeIll(){
   if(resp.message&&resp.message.trim())addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
-// ── Medical ──
+// ── Medical — panel ──
 function renderMedical(){
-  if(G('med_card'))return;
+  if(G('m_h'))return;
   S.activeCard='med_card';
-  addComp(`<div class="card" id="med_card">
-    <div class="ctag">Medical questionnaire <span class="ctag-note">· Honest answers ensure seamless claims</span></div>
-    <div class="mq"><div class="bmir"><input class="fi" id="m_h" type="number" placeholder="Height (cm)" min="100" max="250" oninput="calcBMI()"><input class="fi" id="m_w" type="number" placeholder="Weight (kg)" min="20" max="300" oninput="calcBMI()"><div class="bmib" id="bmi_box">BMI</div></div></div>
-    <div class="mq"><span class="ml">Alcohol consumption</span><div class="rg"><button class="rb on" onclick="setRb('alc','none',this)">None</button><button class="rb" onclick="setRb('alc','occasional',this)">Occasional</button><button class="rb" onclick="setRb('alc','regular',this)">Regular</button></div></div>
-    <div class="mq"><span class="ml">Chronic condition — diabetes, hypertension, blood pressure, or similar?</span><div class="rg"><button class="rb on" onclick="setRb('cc','no',this)">No</button><button class="rb" onclick="setRb('cc','yes',this)">Yes</button></div></div>
-    <div class="mq"><span class="ml">Hospitalised or had major surgery in the last 5 years?</span><div class="rg"><button class="rb on" onclick="setRb('hosp','no',this)">No</button><button class="rb" onclick="setRb('hosp','yes',this)">Yes</button></div></div>
-    <div class="mq"><span class="ml">Taking any regular medication?</span><div class="rg"><button class="rb on" onclick="setRb('medic','no',this)">No</button><button class="rb" onclick="setRb('medic','yes',this)">Yes</button></div></div>
-    <div class="mq"><span class="ml">Family history of cancer, heart disease, or stroke?</span><div class="rg"><button class="rb on" onclick="setRb('fhist','no',this)">No</button><button class="rb" onclick="setRb('fhist','yes',this)">Yes</button></div></div>
-    <div class="mq"><span class="ml">Hazardous activities — diving, motorsport, or similar?</span><div class="rg"><button class="rb on" onclick="setRb('haz','no',this)">No</button><button class="rb" onclick="setRb('haz','yes',this)">Yes</button></div></div>
-    <button class="btn" id="med_btn" disabled onclick="submitMed()">Submit medical information ${ic.arrow}</button>
+  showPanel(`<div class="pnl">
+    <div class="pnl-hd">Medical details</div>
+    <div class="pnl-row bmir"><input class="fi" id="m_h" type="number" placeholder="Height (cm)" min="100" max="250" oninput="calcBMI()"><input class="fi" id="m_w" type="number" placeholder="Weight (kg)" min="20" max="300" oninput="calcBMI()"><div class="bmib" id="bmi_box">BMI</div></div>
+    <div class="pnl-row"><span class="ml">Alcohol consumption</span><div class="rg"><button class="rb on" onclick="setRb('alc','none',this)">None</button><button class="rb" onclick="setRb('alc','occasional',this)">Occasional</button><button class="rb" onclick="setRb('alc','regular',this)">Regular</button></div></div>
+    <div class="pnl-row"><span class="ml">Chronic condition — diabetes, hypertension, or similar?</span><div class="rg"><button class="rb on" onclick="setRb('cc','no',this)">No</button><button class="rb" onclick="setRb('cc','yes',this)">Yes</button></div></div>
+    <div class="pnl-row"><span class="ml">Hospitalised or had major surgery in the last 5 years?</span><div class="rg"><button class="rb on" onclick="setRb('hosp','no',this)">No</button><button class="rb" onclick="setRb('hosp','yes',this)">Yes</button></div></div>
+    <div class="pnl-row"><span class="ml">Taking any regular medication?</span><div class="rg"><button class="rb on" onclick="setRb('medic','no',this)">No</button><button class="rb" onclick="setRb('medic','yes',this)">Yes</button></div></div>
+    <div class="pnl-row"><span class="ml">Family history of cancer, heart disease, or stroke?</span><div class="rg"><button class="rb on" onclick="setRb('fhist','no',this)">No</button><button class="rb" onclick="setRb('fhist','yes',this)">Yes</button></div></div>
+    <div class="pnl-row"><span class="ml">Hazardous activities — diving, motorsport, or similar?</span><div class="rg"><button class="rb on" onclick="setRb('haz','no',this)">No</button><button class="rb" onclick="setRb('haz','yes',this)">Yes</button></div></div>
+    <button class="pnl-sub" id="med_btn" disabled onclick="submitMed()">Submit medical info ${ic.arrow}</button>
   </div>`);
 }
 
 function calcBMI(){
-  const h=Number(G('m_h').value),w=Number(G('m_w').value);
+  const h=Number(G('m_h')?.value||0),w=Number(G('m_w')?.value||0);
   const btn=G('med_btn');if(btn)btn.disabled=!(h>0&&w>0);
-  if(h>0&&w>0){const bmi=(w/Math.pow(h/100,2)).toFixed(1);const box=G('bmi_box');box.textContent='BMI '+bmi;box.style.color=(bmi<18.5||bmi>30)?'var(--gold)':'var(--a)';}
+  if(h>0&&w>0){const bmi=(w/Math.pow(h/100,2)).toFixed(1);const box=G('bmi_box');if(box){box.textContent='BMI '+bmi;box.style.color=(bmi<18.5||bmi>30)?'var(--gold)':'var(--a)';}}
 }
 
 function setRb(key,val,btn){btn.parentElement.querySelectorAll('.rb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');S.medVals[key]=val;}
@@ -926,16 +915,16 @@ function setRb(key,val,btn){btn.parentElement.querySelectorAll('.rb').forEach(b=
 async function submitMed(){
   const wasSilent=_silentConfirm;_silentConfirm=false;
   const h=G('m_h').value,w=G('m_w').value;
-  if(!h||!w){addBot("Please enter your height and weight before submitting the medical form");return;}
+  if(!h||!w){addBot("Please enter your height and weight before submitting");return;}
   const mv=S.medVals;
-  lockCard('med_card');S.stage='medical_done';S.busy=true;setActive(false);
-  if(!wasSilent)addUser('Medical information submitted');
+  hidePanel();S.stage='medical_done';S.busy=true;setActive(false);
+  if(!wasSilent)addUser(`Height: ${h}cm &nbsp;·&nbsp; Weight: ${w}kg &nbsp;·&nbsp; BMI: ${(w/Math.pow(h/100,2)).toFixed(1)}<br>Alcohol: ${mv.alc} &nbsp;·&nbsp; Chronic: ${mv.cc} &nbsp;·&nbsp; Hospitalised: ${mv.hosp}<br>Medication: ${mv.medic} &nbsp;·&nbsp; Family history: ${mv.fhist} &nbsp;·&nbsp; Hazardous: ${mv.haz}`);
   const summary=`Height:${h}cm, Weight:${w}kg, Alcohol:${mv.alc}, Chronic conditions:${mv.cc}, Hospitalised:${mv.hosp}, Medication:${mv.medic}, Family history:${mv.fhist}, Hazardous activities:${mv.haz}`;
   const resp=await callAPI(`Medical questionnaire complete — ${summary} — please ask the user to share their passport in the chat for identity verification`);
   if(resp.message&&resp.message.trim())addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
-// ── Signature ──
+// ── Signature — inline card ──
 function renderSignature(){
   if(G('sig_card'))return;
   S.activeCard='sig_card';
@@ -976,14 +965,14 @@ async function submitSig(){
   S.busy=false;setActive(true);
 }
 
-// ── Payment ──
+// ── Payment — panel ──
 function renderPayment(){
-  if(G('pay_card'))return;
+  if(G('py_name'))return;
   S.activeCard='pay_card';
   let amount=S.q.premium;
   if(S.u.plan==='protection')amount=calcProtPremium(S.q.cover,getAge(S.u.dob),S.q.term,S.u.smoker,S.u.gender);
-  addComp(`<div class="card" id="pay_card">
-    <div class="ctag">${ic.card} First premium payment</div>
+  showPanel(`<div class="pnl">
+    <div class="pnl-hd">${ic.card} First premium payment</div>
     <div class="cnets"><div class="cnet">VISA</div><div class="cnet">MC</div><div class="cnet">AMEX</div></div>
     <div class="payamt"><span class="payamt-l">First month premium</span><span class="payamt-v">${fmt(amount)}</span></div>
     <div class="flds">
@@ -992,7 +981,7 @@ function renderPayment(){
       <div class="pay2"><input class="fi" id="py_exp" type="tel" placeholder="MM / YY" maxlength="7" oninput="fmtExp(this)"><input class="fi" id="py_cvv" type="tel" placeholder="CVV" maxlength="4" style="flex:0 0 80px"></div>
     </div>
     <div class="phi">${ic.lock} Secure payment &nbsp;·&nbsp; Test mode: any valid card format accepted</div>
-    <button class="btn" id="pay_btn" onclick="submitPay('${fmt(amount)}')">Pay ${fmt(amount)} ${ic.arrow}</button>
+    <button class="pnl-sub" id="pay_btn" onclick="submitPay('${fmt(amount)}')">Pay ${fmt(amount)} ${ic.arrow}</button>
   </div>`);
 }
 
@@ -1009,28 +998,28 @@ async function submitPay(fmtAmt){
   if(err)return;
   const btn=G('pay_btn');btn.disabled=true;btn.textContent='Processing…';
   await delay(1800);
-  G('pay_card').classList.add('done');S.stage='paid';S.busy=true;setActive(false);
+  hidePanel();S.stage='paid';S.busy=true;setActive(false);
   addUser(`Payment of ${fmtAmt} processed`);
   const resp=await callAPI(`Payment was successful — please show the nominee collection screen now`);
   if(resp.message&&resp.message.trim())addBot(resp.message);await executeAction(resp.action);S.busy=false;setActive(true);
 }
 
-// ── Nominees ──
+// ── Nominees — panel ──
 let _nomIdx=0;
 function renderNominee(){
-  if(G('nom_card'))return;
+  if(G('nom_rows'))return;
   S.activeCard='nom_card'; _nomIdx=0;
-  addComp(`<div class="card" id="nom_card">
-    <div class="ctag">Your beneficiaries</div>
-    <p style="font-size:12px;color:var(--t2);margin-bottom:13px;line-height:1.6">Tell us who should receive the policy benefit — you can name up to 3 nominees</p>
+  showPanel(`<div class="pnl">
+    <div class="pnl-hd">Your beneficiaries</div>
+    <p style="font-size:12px;color:var(--t2);margin-bottom:13px;line-height:1.6">Tell us who should receive the policy benefit — up to 3 nominees</p>
     <div id="nom_rows"></div>
-    <button class="gbtn" id="nom_add" onclick="addNomRow()">+ Add another nominee</button>
+    <button class="gbtn" id="nom_add" onclick="addNomRow()" style="margin-bottom:10px">+ Add another nominee</button>
     <div class="nom-bar"><div class="nom-bar-fill" id="nom_fill" style="width:0%"></div></div>
     <div class="nom-stats">
       <div><div class="nom-stat-l">Allocated</div><div class="nom-stat-v" id="nom_alloc" style="color:var(--red)">0%</div></div>
       <div style="text-align:right"><div class="nom-stat-l">Remaining</div><div class="nom-stat-v" id="nom_rem" style="color:var(--t2)">100%</div></div>
     </div>
-    <button class="btn" id="nom_btn" disabled onclick="submitNominee()">Confirm nominees ${ic.arrow}</button>
+    <button class="pnl-sub" id="nom_btn" disabled onclick="submitNominee()">Confirm nominees ${ic.arrow}</button>
   </div>`);
   addNomRow(100);
 }
@@ -1091,7 +1080,7 @@ function checkNoms(){
 }
 
 function handlePrefillNominee(nominees){
-  if(!G('nom_card')||!nominees?.length)return;
+  if(!G('nom_rows')||!nominees?.length)return;
   G('nom_rows').innerHTML='';_nomIdx=0;G('nom_add').style.display='';
   nominees.forEach(n=>{
     const idx=_nomIdx;
@@ -1100,7 +1089,7 @@ function handlePrefillNominee(nominees){
     const sel=G(`nom_r_${idx}`);
     if(sel&&n.relationship)[...sel.options].forEach(o=>{if(o.value.toLowerCase()===n.relationship.toLowerCase())sel.value=o.value;});
   });
-  checkNoms();const comp=G('nom_card').closest('.comp');if(comp){msgs.appendChild(comp);scroll();}
+  checkNoms();
 }
 
 async function submitNominee(){
@@ -1110,31 +1099,21 @@ async function submitNominee(){
     nominees.push({name:G(`nom_n_${i}`).value.trim(),relationship:G(`nom_r_${i}`).value,share:Number(G(`nom_p_${i}`).value)});
   });
   S.nominees=nominees;
-  lockCard('nom_card');S.stage='nominee_done';
+  hidePanel();S.stage='nominee_done';
   S.busy=true;setActive(false);
-  addUser('Nominees confirmed — '+nominees.map(n=>`${n.name} (${n.relationship}) ${n.share}%`).join(' · '));
+  addUser('Nominees: '+nominees.map(n=>`${n.name} (${n.relationship}) ${n.share}%`).join(' · '));
   await delay(400);
   renderConfirmation();
 }
 
-// ── Confirmation ──
+// ── Confirmation — message ──
 function renderConfirmation(){
-  if(G('conf_card'))return;
+  if(S.stage==='completed')return;
   const first=S.u.name.split(' ')[0];
   const nomList=S.nominees?.length
-    ?`<br><br>Your ${S.nominees.length===1?'beneficiary':'beneficiaries'}: ${S.nominees.map(n=>`<strong style="color:var(--tx)">${n.name}</strong> (${n.relationship}) — ${n.share}%`).join('&nbsp; · &nbsp;')}`
+    ?'\n\nYour '+(S.nominees.length===1?'beneficiary':'beneficiaries')+': '+S.nominees.map(n=>`${n.name} (${n.relationship}) — ${n.share}%`).join(' · ')
     :'';
-  addComp(`<div class="card" id="conf_card">
-    <div class="conf">
-      <div class="cico">${ic.checkLg}</div>
-      <div class="ch">You're all set, ${first}!</div>
-      <div class="cp">
-        You've done the second most important thing by purchasing a life insurance policy — what comes first is staying healthy so your family and loved ones never have to use it${nomList}<br><br>
-        You will receive your policy copy, or hear from us if any additional information is needed, within the next <strong style="color:var(--tx)">24 hours</strong> — the team will reach out to you at <span class="ce">${S.u.email}</span><br><br>
-        You can also reach us at <span class="ce">help@life-guard.com</span> — please use the same email address as on your application so we can identify you faster
-      </div>
-    </div>
-  </div>`);
+  addBot(`You're all set, ${first}! 🎉\n\nYou've done the second most important thing by purchasing a life insurance policy — what comes first is staying healthy so your family and loved ones never have to use it${nomList}\n\nYou'll receive your policy copy within the next 24 hours at ${S.u.email}\n\nYou can also reach us at help@life-guard.com — please use the same email address as on your application so we can identify you faster`);
   S.stage='completed';inp.placeholder='Your application is being processed…';inp.disabled=true;snd.disabled=true;
 }
 
@@ -1144,8 +1123,8 @@ inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDef
 snd.addEventListener('click',sendUserMsg);
 
 // ── Init ──
-setTimeout(()=>{typing.style.display='flex';scroll();},300);
-setTimeout(()=>{typing.style.display='none';addBot("Welcome to Life Guard — what are you looking for in a life insurance policy?");renderPlans();setActive(true);},900);
+setTimeout(()=>{G('typing').style.display='flex';scroll();},300);
+setTimeout(()=>{G('typing').style.display='none';addBot("Welcome to Life Guard — what are you looking for in a life insurance policy?");renderPlans();setActive(true);},900);
 </script>
 </body>
 </html>
