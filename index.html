@@ -950,7 +950,9 @@ async function submitSig(){
   lockCard('sig_card');S.stage='signed';
   S.busy=true;setActive(false);
   addUser('Signature submitted');
-  await delay(400);
+  const resp=await callAPI("The user has signed — give a brief warm acknowledgement, then we will show the payment screen. Emit action none.");
+  if(resp.message&&resp.message.trim())addBot(resp.message);
+  await delay(200);
   renderPayment();
   S.busy=false;setActive(true);
 }
@@ -970,7 +972,7 @@ function renderPayment(){
       <input class="fi" id="py_card" type="tel" placeholder="Card number" maxlength="19" oninput="fmtCard(this)">
       <div class="pay2"><input class="fi" id="py_exp" type="tel" placeholder="MM / YY" maxlength="7" oninput="fmtExp(this)"><input class="fi" id="py_cvv" type="tel" placeholder="CVV" maxlength="4" style="flex:0 0 80px"></div>
     </div>
-    <div class="phi">${ic.lock} Secure payment &nbsp;·&nbsp; Test mode: any valid card format accepted</div>
+    <div class="phi">${ic.lock} Secure payment</div>
     <button class="pnl-sub" id="pay_btn" onclick="submitPay('${fmt(amount)}')">Pay ${fmt(amount)} ${ic.arrow}</button>
   </div>`);
 }
