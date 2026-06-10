@@ -220,8 +220,8 @@ let _attachFile = null;
 
 const G = id => document.getElementById(id);
 const msgs=G('msgs'),inp=G('inp'),snd=G('snd');
-function showPanel(html){ const p=G('panel'); p.innerHTML=html; p.style.display='block'; scroll(); }
-function hidePanel(){ const p=G('panel'); p.style.display='none'; p.innerHTML=''; }
+function showPanel(html){ const p=G('panel'); p.innerHTML=html; p.style.display='block'; msgs.style.paddingBottom='10px'; scroll(); }
+function hidePanel(){ const p=G('panel'); p.style.display='none'; p.innerHTML=''; msgs.style.paddingBottom='0'; }
 
 const fmt = n => '$'+Math.round(n).toLocaleString('en-US');
 const delay = ms => new Promise(r=>setTimeout(r,ms));
@@ -611,7 +611,7 @@ async function submitDob(){
 
 function handleShowChips(data){
   if(!data?.options?.length)return;
-  showPanel(`<div class="chips">${data.options.map(o=>`<button class="chip" onclick="pickChip(${JSON.stringify(o)})">${o}</button>`).join('')}</div>`);
+  showPanel(`<div class="chips">${data.options.map(o=>`<button class="chip" onclick="pickChip(${JSON.stringify(o).replace(/"/g,'&quot;')})">${o}</button>`).join('')}</div>`);
 }
 
 async function pickChip(val){
