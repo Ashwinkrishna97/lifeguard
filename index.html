@@ -398,22 +398,28 @@ scroll_to_card → smooth-scroll the active card into view; use when the user wa
 
 show_dob_input → show a date picker panel for date of birth; emit when asking for DOB — the panel handles input and format, no typing required
 
+show_income_input → show a USD monthly income input with automatic number formatting; emit when asking for monthly income — the $ symbol is built in, do not mention USD in your message
+
+show_amount_input → show a USD amount input with automatic number formatting; emit when asking for any financial amount — loan totals, insurance sum assured — the $ symbol is built in, do not mention USD
+
+show_email_input → show an email input with live format validation; emit when asking for email address
+
 show_chips  data:{"options":["option1","option2",...]} → show tappable quick-reply chips in the panel; use whenever you ask a question with 2–4 known answer options — smoker (["Yes, I smoke","No, I don't"]), alcohol (["None","Occasionally","Regularly"]), any yes/no medical question (["Yes","No"]), dependents (["None","1","2","3 or more"]), loans or existing insurance (["None","Yes, I have some"]); always emit alongside your question message, never instead of it
 
 ── COLLECTING INFORMATION ──────────────────────────────────────
 Collect all required information through conversation — never show a form. Check the context above before asking any question; never ask for something already captured.
 
 Personal details (name, email, DOB, income):
-Ask naturally, one or two fields at a time — start with name. When asking for income, always specify that you need the monthly amount in USD. When asking for DOB, emit show_dob_input alongside your message — the panel handles the input, do not specify a format. Emit prefill_info as each value is confirmed. Once all 4 required fields AND smoker status are confirmed, show a brief summary of all collected details and invite confirmation — e.g. "Here's what I have: [summary]. Just say confirmed when you're happy and I'll lock those in". Only emit confirm_active_card when the user confirms. Do not auto-submit. If the user gives multiple fields at once, emit prefill_info with all of them, then continue to the next missing field or the smoker question as appropriate. Gender defaults to male — ask only if context suggests otherwise. Smoker status must always be asked explicitly before emitting confirm_active_card, regardless of context. When asking, include a natural disclaimer — e.g. "honest answers here ensure seamless claims down the line". Once the user answers, immediately emit prefill_info with the smoker field — this is required for the form to submit
+Ask naturally, one or two fields at a time — start with name. When asking for income, emit show_income_input alongside your message — do not mention USD, the panel handles the currency and format. When asking for DOB, emit show_dob_input alongside your message — the panel handles the input, do not specify a format. When asking for email, emit show_email_input alongside your message. Emit prefill_info as each value is confirmed. Once all 4 required fields AND smoker status are confirmed, show a brief summary of all collected details and invite confirmation — e.g. "Here's what I have: [summary]. Just say confirmed when you're happy and I'll lock those in". Only emit confirm_active_card when the user confirms. Do not auto-submit. If the user gives multiple fields at once, emit prefill_info with all of them, then continue to the next missing field or the smoker question as appropriate. Gender defaults to male — ask only if context suggests otherwise. Smoker status must always be asked explicitly before emitting confirm_active_card, regardless of context. When asking, include a natural disclaimer — e.g. "honest answers here ensure seamless claims down the line". Once the user answers, immediately emit prefill_info with the smoker field — this is required for the form to submit
 
 Medical details:
 Emit show_medical first — the height and weight panel opens automatically, so do not ask for height and weight conversationally. Your message should only contain the honest-answers note. Once you have height and weight, emit prefill_medical with those values and continue asking the remaining questions one at a time: (1) alcohol consumption, (2) any chronic conditions, (3) hospitalisation in the last 5 years, (4) regular medication, (5) family history of cancer, heart disease, or stroke, (6) hazardous activities. All toggle fields default to none/no — if the user skips one, move on. Once all six questions have been asked and answered or skipped, emit a final prefill_medical containing ALL 8 fields — height, weight, alc, cc, hosp, medic, fhist, haz — with their confirmed values or safe defaults. This single batch signals completion and triggers automatic submission. Do not emit confirm_active_card for medical; the complete prefill_medical is the trigger
 
 ── NEEDS ASSESSMENT ────────────────────────────────────────────
 Run this once, immediately after personal details are confirmed (stage info_collected). Ask the three questions one at a time across separate turns — never bundle them into one message:
-Turn 1: ask about any outstanding mortgage or total loans — if they have any, ask for the total amount in USD
+Turn 1: ask about any outstanding mortgage or total loans — if they have any, emit show_amount_input for the total
 Turn 2 (once answered or skipped): ask about number of financial dependents
-Turn 3 (once answered or skipped): ask about any existing personal life insurance — if they have any, ask for the sum assured in USD and years remaining
+Turn 3 (once answered or skipped): ask about any existing personal life insurance — if they have any, emit show_amount_input for the sum assured, then ask years remaining conversationally
 After all three are answered or skipped, compute the adjusted cover and emit the quote
 
 Employer or group coverage is NOT personal coverage — flag this clearly if mentioned; note it is tied to employment, not portable, and typically covers only 2–4× salary
@@ -583,7 +589,10 @@ async function executeAction(action){
     case 'reset_to_plan_selection': editCard('plan_card','start',true);break;
     case 'scroll_to_card': {const c=G(S.activeCard);if(c)c.scrollIntoView({behavior:'smooth',block:'nearest'});}break;
     case 'show_chips': handleShowChips(action.data);break;
-    case 'show_dob_input': handleShowDobInput();break;
+    case 'show_dob_input':    handleShowDobInput();break;
+    case 'show_income_input': handleShowIncomeInput();break;
+    case 'show_amount_input': handleShowAmountInput();break;
+    case 'show_email_input':  handleShowEmailInput();break;
   }
 }
 
@@ -604,6 +613,80 @@ async function submitDob(){
   hidePanel();addUser(dob);
   S.busy=true;setActive(false);
   const resp=await callAPI(dob);
+  if(resp.message&&resp.message.trim())addBot(resp.message);
+  await executeAction(resp.action);
+  S.busy=false;setActive(true);
+}
+
+function fmtNumericInput(el,btnId){
+  const raw=el.value.replace(/[^0-9]/g,'');
+  el.value=raw?Number(raw).toLocaleString('en-US'):'';
+  G(btnId).disabled=!raw||Number(raw)<=0;
+}
+
+function handleShowIncomeInput(){
+  showPanel(`<div class="pnl">
+    <div class="pfxw">
+      <span class="pfx">$</span>
+      <input class="fi" style="padding-left:28px" id="inc_inp" type="text" inputmode="numeric" placeholder="0" oninput="fmtNumericInput(this,'inc_btn')">
+    </div>
+    <button class="pnl-sub" id="inc_btn" disabled onclick="submitIncome()">Confirm ${ic.arrow}</button>
+  </div>`);
+}
+
+async function submitIncome(){
+  const raw=G('inc_inp').value.replace(/[^0-9]/g,'');
+  if(!raw||Number(raw)<=0)return;
+  const val=Number(raw);
+  hidePanel();addUser(`$${val.toLocaleString('en-US')}/mo`);
+  S.busy=true;setActive(false);
+  const resp=await callAPI(String(val));
+  if(resp.message&&resp.message.trim())addBot(resp.message);
+  await executeAction(resp.action);
+  S.busy=false;setActive(true);
+}
+
+function handleShowAmountInput(){
+  showPanel(`<div class="pnl">
+    <div class="pfxw">
+      <span class="pfx">$</span>
+      <input class="fi" style="padding-left:28px" id="amt_inp" type="text" inputmode="numeric" placeholder="0" oninput="fmtNumericInput(this,'amt_btn')">
+    </div>
+    <button class="pnl-sub" id="amt_btn" disabled onclick="submitAmount()">Confirm ${ic.arrow}</button>
+  </div>`);
+}
+
+async function submitAmount(){
+  const raw=G('amt_inp').value.replace(/[^0-9]/g,'');
+  if(!raw||Number(raw)<=0)return;
+  const val=Number(raw);
+  hidePanel();addUser(`$${val.toLocaleString('en-US')}`);
+  S.busy=true;setActive(false);
+  const resp=await callAPI(String(val));
+  if(resp.message&&resp.message.trim())addBot(resp.message);
+  await executeAction(resp.action);
+  S.busy=false;setActive(true);
+}
+
+function handleShowEmailInput(){
+  showPanel(`<div class="pnl">
+    <input class="fi" id="email_inp" type="email" placeholder="your@email.com" oninput="validateEmailInput(this)">
+    <button class="pnl-sub" id="email_btn" disabled onclick="submitEmail()">Confirm ${ic.arrow}</button>
+  </div>`);
+}
+
+function validateEmailInput(el){
+  const valid=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim());
+  el.classList.toggle('err',el.value.length>0&&!valid);
+  G('email_btn').disabled=!valid;
+}
+
+async function submitEmail(){
+  const val=G('email_inp').value.trim();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val))return;
+  hidePanel();addUser(val);
+  S.busy=true;setActive(false);
+  const resp=await callAPI(val);
   if(resp.message&&resp.message.trim())addBot(resp.message);
   await executeAction(resp.action);
   S.busy=false;setActive(true);
