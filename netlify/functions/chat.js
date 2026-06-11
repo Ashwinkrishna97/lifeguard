@@ -1,6 +1,6 @@
 exports.handler = async (event) => {
   const cors = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGIN || '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Content-Type': 'application/json'
@@ -17,6 +17,7 @@ exports.handler = async (event) => {
 
   try {
     const { messages, systemStatic, systemDynamic, imageData } = JSON.parse(event.body);
+    if (!Array.isArray(messages) || messages.length > 80) return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'Invalid payload' }) };
 
     let apiMessages = messages.map(m => ({ ...m }));
     if (imageData && apiMessages.length > 0) {
