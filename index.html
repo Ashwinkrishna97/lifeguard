@@ -40,7 +40,7 @@ body{height:100%;background:var(--bg);color:var(--tx);font-family:'Inter',ui-san
 .row.u .bbl{background:var(--a);color:#fff;font-weight:500;border-bottom-right-radius:3px}
 .comp{margin-left:36px;margin-bottom:5px;animation:pop .22s ease;position:relative}
 
-#typing{display:none;align-items:flex-end;gap:8px;padding:0 14px 6px}
+#typing{display:none;align-items:flex-end;gap:8px;padding:10px 14px 6px}
 .tdots{background:var(--bb);border:1px solid var(--bd);border-radius:14px;border-bottom-left-radius:3px;padding:10px;display:flex;gap:5px;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .tdot{width:6px;height:6px;background:var(--s4);border-radius:50%;animation:bnc 1.2s infinite}
 .tdot:nth-child(2){animation-delay:.2s}.tdot:nth-child(3){animation-delay:.4s}
@@ -488,7 +488,11 @@ Turn 1: ask about any outstanding mortgage or total loans — emit show_chips wi
 
 Turn 2 (once answered or skipped): ask about number of financial dependents — emit show_chips with ["None","1","2","3 or more"] alongside your question
 
+Suitability check (runs at most once, only at this point): if the selected plan is protection AND dependents is None AND the user reported no outstanding loans, pause before Turn 3 and give honest advice using EXACTLY this message with show_chips ["I still want to buy","Change plan"]: "Honest advice before we go further — a protection plan only pays out to people who depend on your income, and you've told me there's no one in that position. A savings or investment plan would likely serve you better, since those build value you can use yourself. One exception: if you're taking a mortgage and your bank requires a protection policy with them as beneficiary, protection is the right call. So, what would you like to do". I still want to buy → continue to Turn 3 with no further commentary. Change plan → emit show_plan_selector; their personal details are retained, so once they pick, resume the journey from where it stands and never re-ask anything already answered
+
 Turn 3 (once answered or skipped): ask about any existing personal life insurance — emit show_chips with ["Yes, I have a policy","No, I don't"] alongside your question; only if they answer Yes, follow up with show_amount_input for the sum assured, then ask years remaining conversationally
+
+If the user replies "Actually, none" or otherwise retracts while you are waiting for a loan total or sum assured, record that item as zero/No and move straight to the next question — never argue or re-ask
 
 After all three are answered or skipped, compute the adjusted cover and emit the quote
 
@@ -499,6 +503,8 @@ Once answered or skipped: adjusted cover = min(max(10 × income × 12 + loans �
 If all three questions were already answered earlier in the conversation, skip asking and emit the quote directly with the adjusted figure
 
 If the user explicitly skips, emit the quote with no data — defaults apply
+
+Reverse suitability: if the selected plan is savings or investment AND the user reports 2 or more dependents or outstanding loans, mention once — alongside the quote, not as a blocker — that a protection plan delivers far higher life cover per premium dollar if family protection is the priority, and that they can say switch at any time. One mention only; never repeat or push
 
 ── REQUESTS BEYOND THE PURCHASE FLOW ───────────────────────────
 Help genuinely with any request that serves the user's understanding or decision:
@@ -858,7 +864,8 @@ function handleShowAmountInput(){
       <span class="pfx">$</span>
       <input class="fi" style="padding-left:28px" id="amt_inp" type="text" inputmode="numeric" placeholder="0" oninput="fmtNumericInput(this,'amt_btn')">
     </div>
-    <button class="pnl-sub" id="amt_btn" disabled onclick="submitAmount()">Confirm ${ic.arrow}</button>
+    <button class="pnl-sub" id="amt_btn" disabled onclick="submitAmount()" style="margin-bottom:0">Confirm ${ic.arrow}</button>
+    <button class="gbtn" style="margin-bottom:10px" onclick="pickChip('Actually, none')">Actually, none</button>
   </div>`);
 }
 
