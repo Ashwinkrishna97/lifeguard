@@ -37,7 +37,7 @@ body{height:100%;background:var(--bg);color:var(--tx);font-family:'Inter',ui-san
 .av svg{width:13px;height:13px}
 .bbl{max-width:80%;padding:12px;border-radius:14px;font-size:14px;line-height:1.6}
 .row:not(.u) .bbl{background:var(--bb);border:1px solid var(--bd);border-bottom-left-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.row.u .bbl{background:var(--a);color:#fff;font-weight:500;border-bottom-right-radius:3px;-webkit-touch-callout:none;user-select:none}
+.row.u .bbl{background:var(--a);color:#fff;font-weight:500;border-bottom-right-radius:3px;user-select:none;touch-action:manipulation}
 .comp{margin-left:36px;margin-bottom:5px;animation:pop .22s ease;position:relative}
 
 #typing{display:none;align-items:flex-end;gap:8px;padding:10px 14px 6px}
@@ -93,7 +93,8 @@ body{height:100%;background:var(--bg);color:var(--tx);font-family:'Inter',ui-san
 #snd:disabled{background:var(--s4);cursor:default}
 
 #snd svg{width:14px;height:14px}
-.card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:17px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:17px;box-shadow:0 1px 4px rgba(0,0,0,.05);position:relative}
+.card.done::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,.20);border-radius:14px;pointer-events:none}
 .card.done{opacity:.8;cursor:pointer;user-select:none;touch-action:manipulation}
 .card.done *{pointer-events:none}
 .card-overlay{position:absolute;top:10px;right:10px;pointer-events:none}
@@ -130,7 +131,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .fnds{display:flex;gap:7px;margin:9px 0}
 .fnd{flex:1;padding:9px;background:var(--s2);border:1.5px solid var(--bd);border-radius:9px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:all .2s}
 .fnd.sel{border-color:var(--a);background:var(--aa)}
-.fn{font-size:9px;font-weight:700;color:var(--t2);letter-spacing:.06em;margin-bottom:2px}
+.fn{font-size:9px;font-weight:700;color:var(--t2);margin-bottom:2px}
 .fr{font-size:14px;font-weight:700;color:var(--a)}
 .fs{font-size:9px;color:var(--t3);margin-top:1px}
 .warn{background:rgba(154,100,0,.07);border:1px solid rgba(154,100,0,.22);border-radius:9px;padding:10px;display:flex;gap:8px;font-size:11px;color:var(--gold);line-height:1.6;align-items:flex-start}
@@ -233,9 +234,9 @@ const ic = {
 const API = '/.netlify/functions/chat';
 
 const FUNDS = {
-  aggressive:{ label:'Aggressive', rate:7.51 },
-  balanced:  { label:'Balanced',   rate:5.98 },
-  passive:   { label:'Passive',    rate:4.96 }
+  aggressive:{ label:'Aggressive fund', rate:7.51 },
+  balanced:  { label:'Balanced fund',   rate:5.98 },
+  passive:   { label:'Passive fund',    rate:4.96 }
 };
 
 const AGE_RATES = {
@@ -349,7 +350,7 @@ function lockCard(id){
 
 function editCard(id,resetStage,force=false){
   if(S.busy&&!force)return;
-  if(!force&&msgs.querySelector(`[data-sentinel="${id}"]`)&&!confirm('Editing this step will reset everything that came after it. Continue?'))return;
+  hidePanel();
   if(id==='plan_card'){
     S.u={name:'',email:'',dob:'',gender:'male',income:0,smoker:false,smokerConfirmed:false,plan:''};
     S.nameMatched=false;
@@ -387,41 +388,33 @@ function editCard(id,resetStage,force=false){
   }
 }
 
-let _lastTapCard=null,_lastTapTime=0;
+let _lastTapEl=null,_lastTapTime=0;
+
+function editTarget(e){
+  const card=e.target.closest('.card.done');
+  if(card&&STAGE_MAP[card.id])return{kind:'card',el:card};
+  const row=e.target.closest('.row.u[data-editable]');
+  if(row)return{kind:'row',el:row};
+  return null;
+}
+
+function triggerEdit(t){
+  if(S.busy)return;
+  if(t.kind==='card')editCard(t.el.id,STAGE_MAP[t.el.id]);
+  else openEditPopup(t.el);
+}
 
 msgs.addEventListener('dblclick',e=>{
-  const card=e.target.closest('.card.done');
-  if(!card||!STAGE_MAP[card.id])return;
-  editCard(card.id,STAGE_MAP[card.id]);
-});
-
-let _lpTimer=null;
-
-let _lastEditOpen=0;
-
-msgs.addEventListener('touchstart',e=>{
-  const row=e.target.closest('.row.u[data-editable]');
-  if(!row||S.busy)return;
-  _lpTimer=setTimeout(()=>{_lpTimer=null;openEditPopup(row);},500);
-},{passive:true});
-
-msgs.addEventListener('touchend',()=>{if(_lpTimer){clearTimeout(_lpTimer);_lpTimer=null;}},{passive:true});
-
-msgs.addEventListener('touchmove',()=>{if(_lpTimer){clearTimeout(_lpTimer);_lpTimer=null;}},{passive:true});
-
-msgs.addEventListener('contextmenu',e=>{
-  const row=e.target.closest('.row.u[data-editable]');
-  if(!row||S.busy)return;
-  e.preventDefault();
-  openEditPopup(row);
+  const t=editTarget(e);
+  if(t)triggerEdit(t);
 });
 
 msgs.addEventListener('touchend',e=>{
-  const card=e.target.closest('.card.done');
-  if(!card||!STAGE_MAP[card.id])return;
+  const t=editTarget(e);
+  if(!t)return;
   const now=Date.now();
-  if(card===_lastTapCard&&now-_lastTapTime<300){e.preventDefault();editCard(card.id,STAGE_MAP[card.id]);_lastTapCard=null;_lastTapTime=0;}
-  else{_lastTapCard=card;_lastTapTime=now;}
+  if(t.el===_lastTapEl&&now-_lastTapTime<300){e.preventDefault();_lastTapEl=null;_lastTapTime=0;triggerEdit(t);}
+  else{_lastTapEl=t.el;_lastTapTime=now;}
 },{passive:false});
 
 // ── System prompt ──
@@ -573,7 +566,7 @@ When the user names a plan type in natural language:
 ── AFFORDABILITY ────────────────────────────────────────────────
 Savings/investment: if the intended premium exceeds 20% of income, flag the concern and suggest adjusting before emitting the quote
 
-Protection: premium is only known at acceptance. If the accepted premium exceeds 20% of income, acknowledge, flag the concern, suggest adjusting cover or term, and emit show_chips with ["Proceed anyway","Adjust the quote"]; on the next turn, Proceed anyway → show_illustration, Adjust the quote → scroll_to_card. Wait for that explicit choice before emitting show_illustration
+Protection: premium is only known at acceptance. If the accepted premium exceeds 20% of income, acknowledge the concern and note they can tap the quote card to adjust cover or term at any time, then proceed directly to show_illustration — do not block with chips
 
 ── CONFIRMATION DETECTION ───────────────────────────────────────
 When activeCard is set and is not plan_card, nom_card, sig_card, pay_card, or kyc_card — check your immediately preceding message first:
@@ -613,7 +606,7 @@ PEP declared: acknowledge neutrally without judgement; note that enhanced due di
 
 - The "message" field must be plain text only — never use asterisks, underscores, bullet characters (•), hashes, or any markdown syntax; the field is rendered as-is so all symbols appear literally; use plain phrasing for emphasis, line breaks for structure
 
-- Responses warm and concise (2–3 sentences). Never end with a period — drop all terminal punctuation for a casual, conversational feel
+- Responses warm and concise (2–3 sentences). Never end with a period — this means no period at the end of the message and no period immediately before a line break; drop terminal punctuation at every paragraph boundary and at the end for a casual, conversational feel
 
 - During info or medical collection (info_card or med_card active), ALWAYS include a message — acknowledge what was received, show any calculated value (e.g. BMI), and ask the next question or confirm completion. Never emit message:"" during collection. Outside collection, set "message" to "" only for a single unambiguous field value where the action itself is sufficient feedback
 
@@ -631,7 +624,7 @@ PEP declared: acknowledge neutrally without judgement; note that enhanced due di
 
 - Never emit show_amount_input as an opening question — always use show_chips to confirm the user has an amount to declare (yes/no) before asking for the figure
 
-- When answering questions mid-journey while a quote or illustration card is active: close your reply with a natural re-engagement and emit show_chips with ["Proceed","Adjust"]; on the next turn, Proceed → confirm_active_card, Adjust → scroll_to_card. While the signature card is active, re-engage in words only and remind the user to draw or type their signature on the card — never offer a Proceed chip there, since you cannot sign on their behalf`;
+- When answering questions mid-journey while a quote card is active: close your reply with a natural re-engagement and emit show_chips with ["Proceed","Adjust"]; on the next turn, Proceed → confirm_active_card, Adjust → scroll_to_card. While the illustration or signature card is active, re-engage in words only — those cards have built-in buttons, so never offer Proceed or Adjust chips`;
   return staticPart;})();
 
 function buildSysPrompt(){
@@ -719,7 +712,7 @@ async function retryLast(){
 function ensureProgress(){
   if(window._lastFailed)return;
   switch(S.stage){
-    case 'quote_accepted': if(S.u.plan!=='protection'||S.q.premium<=0.2*S.u.income)renderIllustration(); break;
+    case 'quote_accepted': renderIllustration(); break;
     case 'illustration_agreed': renderMedical(); break;
     case 'doc_uploaded': if(!S.kycDone)renderKyc(); break;
     case 'kyc_done': renderSignature(); break;
@@ -743,7 +736,7 @@ function addBot(text){
     .replace(/^#{1,6}\s*/gm,'')
     .replace(/\n/g,'<br>')
     .replace(/(<br>\s*)[-*•·]\s+/g,'$1')
-    .replace(/\.(<br>|\s)*$/i,'');
+    .replace(/\.(?=\s*(<br>|$))/gi,'');
   const row=document.createElement('div');row.className='row';
   row.innerHTML=`<div class="av">${ic.brand}</div><div class="bbl">${clean}</div>`;
   msgs.appendChild(row);scroll();
@@ -1170,8 +1163,8 @@ function renderProtQuote(){
   const {cover,term}=S.q,age=getAge(S.u.dob),mp=calcProtPremium(cover,age,term,S.u.smoker,S.u.gender);
   addComp(`<div class="card" id="prot_card">
     <div class="ctag">${ic.shield} Protection plan</div>
-    <div class="slr"><div class="slh"><span class="sll">Life cover</span><span class="slv" id="pc_cv">${fmt(cover)}</span></div><input type="range" id="pc_csl" min="50000" max="1000000" step="10000" value="${cover}" oninput="upProtQ()"><div class="sllm"><span>$50k</span><span>$1m</span></div></div>
-    <div class="slr"><div class="slh"><span class="sll">Policy term</span><span class="slv" id="pc_tv">${term} years</span></div><input type="range" id="pc_tsl" min="5" max="30" step="1" value="${term}" oninput="upProtQ()"><div class="sllm"><span>5 yr</span><span>30 yr</span></div></div>
+    <div class="slr"><div class="slh"><span class="sll">Life cover</span><span class="slv" id="pc_cv">${fmt(cover)}</span></div><input type="range" id="pc_csl" min="50000" max="1000000" step="10000" value="${cover}" oninput="upProtQ()"><div class="sllm"><span>$50,000</span><span>$1,000,000</span></div></div>
+    <div class="slr"><div class="slh"><span class="sll">Policy term</span><span class="slv" id="pc_tv">${term} years</span></div><input type="range" id="pc_tsl" min="5" max="30" step="1" value="${term}" oninput="upProtQ()"><div class="sllm"><span>5 years</span><span>30 years</span></div></div>
     <div class="qdiv"></div>
     <div class="qrow"><div><div class="ql">Monthly premium</div><div class="qv" id="pc_mp">${fmt(mp)}</div><div class="qs">per month</div></div><div style="text-align:right"><div class="ql">Total payment</div><div class="qv" id="pc_tp">${fmt(mp*term*12)}</div><div class="qs" id="pc_ts">over ${term} years</div></div></div>
     <div class="qrow"><div><div class="ql">Maturity amount</div><div class="qv">—</div><div class="qs">This plan has no maturity payout</div></div></div>
@@ -1207,8 +1200,8 @@ function renderSavQuote(){
   const prem=S.q.premium,term=S.q.term,cover=Math.min(120*prem,1e6),mat=calcSavMaturity(prem,term);
   addComp(`<div class="card" id="sav_card">
     <div class="ctag">${ic.savings} Savings plan</div>
-    <div class="slr"><div class="slh"><span class="sll">Monthly premium</span><span class="slv" id="sv_pv">${fmt(prem)}</span></div><input type="range" id="sv_psl" min="100" max="10000" step="50" value="${prem}" oninput="upSavQ()"><div class="sllm"><span>$100</span><span>$10k</span></div></div>
-    <div class="slr"><div class="slh"><span class="sll">Policy term</span><span class="slv" id="sv_tv">${term} years</span></div><input type="range" id="sv_tsl" min="5" max="10" step="1" value="${term}" oninput="upSavQ()"><div class="sllm"><span>5 yr</span><span>10 yr</span></div></div>
+    <div class="slr"><div class="slh"><span class="sll">Monthly premium</span><span class="slv" id="sv_pv">${fmt(prem)}</span></div><input type="range" id="sv_psl" min="100" max="10000" step="50" value="${prem}" oninput="upSavQ()"><div class="sllm"><span>$100</span><span>$10,000</span></div></div>
+    <div class="slr"><div class="slh"><span class="sll">Policy term</span><span class="slv" id="sv_tv">${term} years</span></div><input type="range" id="sv_tsl" min="5" max="10" step="1" value="${term}" oninput="upSavQ()"><div class="sllm"><span>5 years</span><span>10 years</span></div></div>
     <div class="qdiv"></div>
     <div class="qrow"><div><div class="ql">Life cover</div><div class="qv" id="sv_cv">${fmt(cover)}</div><div class="qs">terminal illness, disability, or death</div></div></div>
     <div class="qrow"><div><div class="ql">Guaranteed maturity</div><div class="qv" id="sv_mv">${fmt(mat)}</div><div class="qs">at end of term</div></div><div style="text-align:right"><div class="ql">Total paid</div><div class="qv" id="sv_tp">${fmt(prem*term*12)}</div><div class="qs" id="sv_ts">over ${term} years</div></div></div>
@@ -1242,17 +1235,17 @@ function renderInvQuote(){
   const prem=S.q.premium,term=S.q.term,fund=S.q.fund,cover=Math.min(120*prem,1e6),mat=calcInvMaturity(prem,term,fund);
   addComp(`<div class="card" id="inv_card">
     <div class="ctag">${ic.trending} Investment plan</div>
-    <div class="slr"><div class="slh"><span class="sll">Monthly premium</span><span class="slv" id="iv_pv">${fmt(prem)}</span></div><input type="range" id="iv_psl" min="100" max="10000" step="50" value="${prem}" oninput="upInvQ()"><div class="sllm"><span>$100</span><span>$10k</span></div></div>
-    <div class="slr"><div class="slh"><span class="sll">Policy term</span><span class="slv" id="iv_tv">${term} years</span></div><input type="range" id="iv_tsl" min="5" max="30" step="1" value="${term}" oninput="upInvQ()"><div class="sllm"><span>5 yr</span><span>30 yr</span></div></div>
+    <div class="slr"><div class="slh"><span class="sll">Monthly premium</span><span class="slv" id="iv_pv">${fmt(prem)}</span></div><input type="range" id="iv_psl" min="100" max="10000" step="50" value="${prem}" oninput="upInvQ()"><div class="sllm"><span>$100</span><span>$10,000</span></div></div>
+    <div class="slr"><div class="slh"><span class="sll">Policy term</span><span class="slv" id="iv_tv">${term} years</span></div><input type="range" id="iv_tsl" min="5" max="30" step="1" value="${term}" oninput="upInvQ()"><div class="sllm"><span>5 years</span><span>30 years</span></div></div>
     <div class="qdiv"></div>
-    <div class="ql" style="margin-bottom:8px">Investment fund</div>
+    <div class="ql" style="margin-bottom:8px">Investment fund &nbsp;<span style="text-transform:none;font-weight:400;color:var(--t3);letter-spacing:0">· &nbsp; Debt to equity split</span></div>
     <div class="fnds" id="fund_opts">
-      <div class="fnd" onclick="pickFund('aggressive',this)"><div class="fn">AGGRESSIVE</div><div class="fr">7.51%</div><div class="fs">70% Eq / 30% Debt</div></div>
-      <div class="fnd sel" onclick="pickFund('balanced',this)"><div class="fn">BALANCED</div><div class="fr">5.98%</div><div class="fs">50% Eq / 50% Debt</div></div>
-      <div class="fnd" onclick="pickFund('passive',this)"><div class="fn">PASSIVE</div><div class="fr">4.96%</div><div class="fs">30% Eq / 70% Debt</div></div>
+      <div class="fnd" onclick="pickFund('aggressive',this)"><div class="fn">${FUNDS.aggressive.label}</div><div class="fr">7.51%</div><div class="fs">30% · 70%</div></div>
+      <div class="fnd sel" onclick="pickFund('balanced',this)"><div class="fn">${FUNDS.balanced.label}</div><div class="fr">5.98%</div><div class="fs">50% · 50%</div></div>
+      <div class="fnd" onclick="pickFund('passive',this)"><div class="fn">${FUNDS.passive.label}</div><div class="fr">4.96%</div><div class="fs">70% · 30%</div></div>
     </div>
     <div class="qdiv"></div>
-    <div class="qrow"><div><div class="ql">Life cover</div><div class="qv" id="iv_cv">${fmt(cover)}</div></div><div style="text-align:right"><div class="ql">Projected maturity</div><div class="qv" id="iv_mv">${fmt(mat)}</div><div class="qs" id="iv_ms">after ${term} yrs · ${FUNDS[fund].label}</div></div></div>
+    <div class="qrow"><div><div class="ql">Life cover</div><div class="qv" id="iv_cv">${fmt(cover)}</div></div><div style="text-align:right"><div class="ql">Projected maturity</div><div class="qv" id="iv_mv">${fmt(mat)}</div><div class="qs" id="iv_ms">after ${term} years · ${FUNDS[fund].label}</div></div></div>
     <div class="qrow"><div><div class="ql">Total premiums</div><div class="qv" id="iv_tp">${fmt(prem*term*12)}</div></div></div>
     <div class="qdiv"></div>
     <div class="warn">${ic.warn} Past returns are not indicative of future gains — please invest as per your risk appetite</div>
@@ -1270,14 +1263,14 @@ function pickFund(key,el){document.querySelectorAll('#fund_opts .fnd').forEach(f
 function upInvQ(){
   const prem=Number(G('iv_psl').value),term=Number(G('iv_tsl').value);S.q.premium=prem;S.q.term=term;
   const cover=Math.min(120*prem,1e6),mat=calcInvMaturity(prem,term,S.q.fund);
-  G('iv_pv').textContent=fmt(prem);G('iv_tv').textContent=term+' years';G('iv_cv').textContent=fmt(cover);G('iv_mv').textContent=fmt(mat);G('iv_ms').textContent=`after ${term} yrs · ${FUNDS[S.q.fund].label}`;G('iv_tp').textContent=fmt(prem*term*12);
+  G('iv_pv').textContent=fmt(prem);G('iv_tv').textContent=term+' years';G('iv_cv').textContent=fmt(cover);G('iv_mv').textContent=fmt(mat);G('iv_ms').textContent=`after ${term} years · ${FUNDS[S.q.fund].label}`;G('iv_tp').textContent=fmt(prem*term*12);
 }
 
 async function acceptInvQ(){
   const {premium,term,fund}=S.q,mat=calcInvMaturity(premium,term,fund);
   const wasSilent=_silentConfirm;_silentConfirm=false;
   lockCard('inv_card');S.stage='quote_accepted';S.busy=true;setActive(false);
-  if(!wasSilent)addUser(`Investment plan confirmed — ${fmt(premium)}/month &nbsp;·&nbsp; ${term} yrs &nbsp;·&nbsp; ${FUNDS[fund].label} Fund`);
+  if(!wasSilent)addUser(`Investment plan confirmed — ${fmt(premium)}/month &nbsp;·&nbsp; ${term} years &nbsp;·&nbsp; ${FUNDS[fund].label}`);
   const resp=await callAPI(`I've accepted the investment plan — premium: ${fmt(premium)}/month, term: ${term} years, fund: ${FUNDS[fund].label} (${FUNDS[fund].rate}%), projected maturity: ${fmt(mat)} — please show the illustration`);
   if(resp.message&&resp.message.trim())addBot(resp.message);await executeActions(resp);ensureProgress();S.busy=false;setActive(true);
 }
@@ -1287,15 +1280,14 @@ function renderIllustration(){
   if(G('ill_card'))return;
   S.activeCard='ill_card';
   const rows=buildIllustration();
-  const hdr='<th>Yr</th><th>Age</th><th>Premiums paid</th><th>Life cover</th><th>Maturity value</th><th>Surrender value</th>';
+  const hdr='<th>Year</th><th>Age</th><th>Premiums paid</th><th>Life cover</th><th>Maturity value</th><th>Surrender value</th>';
   const tBody=rows.map(r=>`<tr><td>${r.y}</td><td>${r.age}</td><td>${fmt(r.paid)}</td><td>${fmt(r.cover)}</td><td>${r.mat!=null?fmt(r.mat):'—'}</td><td>${r.sv!=null?fmt(r.sv):'—'}</td></tr>`).join('');
   const last=rows[rows.length-1];
   const totRow=`<tr class="tot"><td>Total</td><td>—</td><td>${fmt(last.paid)}</td><td>${fmt(last.cover)}</td><td>${last.mat!=null?fmt(last.mat):'—'}</td><td>${last.sv!=null?fmt(last.sv):'—'}</td></tr>`;
   addComp(`<div class="card" id="ill_card">
     <div class="ctag">Policy illustration</div>
     <div class="ilw"><table class="ilt"><thead><tr>${hdr}</tr></thead><tbody>${tBody}</tbody><tfoot>${totRow}</tfoot></table></div>
-    <p style="font-size:10px;color:var(--t3);margin-top:8px;line-height:1.5">Figures shown are illustrative only and not a guarantee of future value. Actual values may vary.</p>
-    <label class="decl"><input type="checkbox" id="ill_chk" onchange="G('ill_btn').disabled=!this.checked"> I hereby confirm that I have fully read and understood the policy terms, conditions, and the illustration above</label>
+    <label class="decl"><input type="checkbox" id="ill_chk" onchange="G('ill_btn').disabled=!this.checked"> I hereby confirm that I have fully read and understood the illustration table above${S.u.plan==='investment'?'. I fully understand that past returns are not indicative of future gains':''}</label>
     <button class="btn" id="ill_btn" disabled onclick="agreeIll()">I agree, proceed ${ic.arrow}</button>
   </div>`);
 }
@@ -1646,7 +1638,6 @@ function cancelEdit(){
 }
 
 function openEditPopup(row){
-  const now=Date.now();if(now-_lastEditOpen<600)return;_lastEditOpen=now;
   if(window._editingRow)cancelEdit();
   const type=row.dataset.inputType||'text';
   const meta=row.dataset.inputMeta?JSON.parse(row.dataset.inputMeta):{};
@@ -1670,7 +1661,7 @@ function openEditPopup(row){
   window._editingRow=row;
   row.classList.add('editing');
 
-  const hdr=`<div class="edit-bar"><span class="edit-bar-label">✏ Editing</span><button class="edit-bar-cancel" onclick="cancelEdit()">✕ Cancel</button></div>`;
+  const hdr=`<div class="edit-bar"><span class="edit-bar-label">✏ Edit mode</span><button class="edit-bar-cancel" onclick="cancelEdit()">✕ Cancel</button></div>`;
   let inner='';
 
   if(type==='chip'){
