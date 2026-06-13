@@ -37,7 +37,7 @@ body{height:100%;background:var(--bg);color:var(--tx);font-family:'Inter',ui-san
 .av svg{width:13px;height:13px}
 .bbl{max-width:80%;padding:12px;border-radius:14px;font-size:14px;line-height:1.6}
 .row:not(.u) .bbl{background:var(--bb);border:1px solid var(--bd);border-bottom-left-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.row.u .bbl{background:var(--a);color:#fff;font-weight:500;border-bottom-right-radius:3px}
+.row.u .bbl{background:var(--a);color:#fff;font-weight:500;border-bottom-right-radius:3px;-webkit-touch-callout:none;user-select:none}
 .comp{margin-left:36px;margin-bottom:5px;animation:pop .22s ease;position:relative}
 
 #typing{display:none;align-items:flex-end;gap:8px;padding:10px 14px 6px}
@@ -176,6 +176,11 @@ select.fi:invalid{color:var(--t3)}
 .nom-stats{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4px}
 .nom-stat-l{font-size:10px;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:3px}
 .nom-stat-v{font-size:17px;font-weight:700}
+.row.u.editing .bbl{outline:2px solid var(--a);outline-offset:2px;}
+.edit-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--bd);}
+.edit-bar-label{font-size:11px;font-weight:600;color:var(--ad);}
+.edit-bar-cancel{background:none;border:none;font-size:11px;color:var(--t3);cursor:pointer;padding:4px 8px;border-radius:6px;transition:color .2s;}
+.edit-bar-cancel:hover{color:var(--red);}
 
 @keyframes pop{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
 
@@ -223,7 +228,6 @@ const ic = {
   doc:      `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
   warn:     `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
   brand:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
-  lock:     `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
 };
 
 const API = '/.netlify/functions/chat';
@@ -389,6 +393,27 @@ msgs.addEventListener('dblclick',e=>{
   const card=e.target.closest('.card.done');
   if(!card||!STAGE_MAP[card.id])return;
   editCard(card.id,STAGE_MAP[card.id]);
+});
+
+let _lpTimer=null;
+
+let _lastEditOpen=0;
+
+msgs.addEventListener('touchstart',e=>{
+  const row=e.target.closest('.row.u[data-editable]');
+  if(!row||S.busy)return;
+  _lpTimer=setTimeout(()=>{_lpTimer=null;openEditPopup(row);},500);
+},{passive:true});
+
+msgs.addEventListener('touchend',()=>{if(_lpTimer){clearTimeout(_lpTimer);_lpTimer=null;}},{passive:true});
+
+msgs.addEventListener('touchmove',()=>{if(_lpTimer){clearTimeout(_lpTimer);_lpTimer=null;}},{passive:true});
+
+msgs.addEventListener('contextmenu',e=>{
+  const row=e.target.closest('.row.u[data-editable]');
+  if(!row||S.busy)return;
+  e.preventDefault();
+  openEditPopup(row);
 });
 
 msgs.addEventListener('touchend',e=>{
@@ -724,8 +749,16 @@ function addBot(text){
   msgs.appendChild(row);scroll();
 }
 
-function addUser(html){
+function addUser(html,meta={}){
   const row=document.createElement('div');row.className='row u';
+  row.dataset.convIdx=S.conv.length;
+  row.dataset.snapshot=JSON.stringify({
+    u:S.u,q:S.q,medVals:S.medVals,medExplicit:[...S.medExplicit],
+    kyc:S.kyc,kycDone:S.kycDone,nameMatched:S.nameMatched,
+    nominees:S.nominees,stage:S.stage,activeCard:S.activeCard
+  });
+  if(meta.type){row.dataset.inputType=meta.type;row.dataset.editable='true';}
+  if(meta.data)row.dataset.inputMeta=JSON.stringify(meta.data);
   row.innerHTML=`<div class="bbl">${html}</div>`;
   msgs.appendChild(row);scroll();
 }
@@ -821,7 +854,7 @@ async function submitDob(){
   const el=G('dob_inp'),val=el.value;if(!val||val<el.min||val>el.max)return;
   const [y,m,d]=val.split('-');
   const dob=`${d}/${m}/${y}`;
-  hidePanel();addUser(dob);
+  hidePanel();performEditRollback();addUser(dob,{type:'dob'});
   S.busy=true;setActive(false);
   const resp=await callAPI(dob);
   if(resp.message&&resp.message.trim())addBot(resp.message);
@@ -851,7 +884,7 @@ async function submitIncome(){
   const raw=G('inc_inp').value.replace(/[^0-9]/g,'');
   if(!raw||Number(raw)<=0)return;
   const val=Number(raw);
-  hidePanel();addUser(`$${val.toLocaleString('en-US')}/month`);
+  hidePanel();performEditRollback();addUser(`$${val.toLocaleString('en-US')}/month`,{type:'income'});
   S.busy=true;setActive(false);
   const resp=await callAPI(String(val));
   if(resp.message&&resp.message.trim())addBot(resp.message);
@@ -876,7 +909,7 @@ async function submitAmount(){
   const raw=G('amt_inp').value.replace(/[^0-9]/g,'');
   if(!raw||Number(raw)<=0)return;
   const val=Number(raw);
-  hidePanel();addUser(`$${val.toLocaleString('en-US')}`);
+  hidePanel();performEditRollback();addUser(`$${val.toLocaleString('en-US')}`,{type:'amount'});
   S.busy=true;setActive(false);
   const resp=await callAPI(String(val));
   if(resp.message&&resp.message.trim())addBot(resp.message);
@@ -902,7 +935,7 @@ function validateEmailInput(el){
 async function submitEmail(){
   const val=G('email_inp').value.trim();
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val))return;
-  hidePanel();addUser(esc(val));
+  hidePanel();performEditRollback();addUser(esc(val),{type:'email'});
   S.busy=true;setActive(false);
   const resp=await callAPI(val);
   if(resp.message&&resp.message.trim())addBot(resp.message);
@@ -920,6 +953,7 @@ function handleShowUploadPrompt(){
 function handleShowChips(data){
   const opts=data?.options||[];
   if(!opts.length&&!data?.upload)return;
+  window._lastChipData=data;
   const chips=opts.length?`<div class="chipbar"><div class="chips">${opts.map(raw=>{const o=String(raw).replace(/[<>]/g,'');const c=o.trim().length===1;return`<button class="chip${c?' circle':''}" onclick="pickChip(${JSON.stringify(o).replace(/"/g,'&quot;')})">${esc(o)}</button>`;}).join('')}</div></div>`:'';
   const up=data?.upload?`<div class="pnl" id="upl_pnl" style="padding-top:0">
     <button class="pnl-sub" style="margin-top:0" onclick="G('chat-file').click()">${ic.doc} Attach document</button>
@@ -930,7 +964,8 @@ function handleShowChips(data){
 async function pickChip(val){
   if(S.busy)return;
   hidePanel();
-  addUser(esc(val));
+  performEditRollback();
+  addUser(esc(val),{type:'chip',data:window._lastChipData||{options:[val]}});
   S.busy=true;setActive(false);
   const resp=await callAPI(val);
   if(resp.message&&resp.message.trim())addBot(resp.message);
@@ -1053,11 +1088,12 @@ async function sendUserMsg(){
   const text=inp.value.trim();
   const hasFile=!!_attachFile;
   if(!text&&!hasFile||S.busy)return;
+  if(window._editingRow)cancelEdit();
   S.busy=true;setActive(false);
   const bubbleHtml=hasFile
     ?`<span style="display:flex;align-items:center;gap:5px;font-size:12px;opacity:.8;margin-bottom:${text?'5px':'0'}">${ic.doc} ${esc(_attachFile.name)}</span>${esc(text)}`
     :esc(text);
-  addUser(bubbleHtml);
+  addUser(bubbleHtml,hasFile?{}:{type:'text',data:{text}});
   inp.value='';resizeInp();
   let resp;
   if(hasFile){const file=_attachFile;clearAttachment();resp=await callAPI(text||"I've shared a document — please analyse it",{base64:file.base64,mediaType:file.mediaType});}
@@ -1088,7 +1124,7 @@ async function pickPlan(plan){
   S.u.plan=plan; S.stage='plan_selected';
   S.activeCard='info_card';
   const labels={protection:'Protect my family — pure life cover',investment:'Grow my wealth — investment with life cover',savings:'Save for a rainy day — guaranteed savings'};
-  addUser(labels[plan]);
+  addUser(labels[plan],{type:'plan'});
   S.busy=true;setActive(false);
   await delay(400);
   const resp=await callAPI(`Plan selected: ${labels[plan]} — please start collecting my details`);
@@ -1297,11 +1333,11 @@ function checkHW(){
 
 async function submitHW(){
   const h=Number(G('hw_h').value),w=Number(G('hw_w').value);if(!h||!w)return;
+  hidePanel();
+  performEditRollback();
+  addUser(`Height: ${h}cm &nbsp;·&nbsp; Weight: ${w}kg`,{type:'hw'});
   S.medVals.height=h;S.medVals.weight=w;
   S.medExplicit.add('height');S.medExplicit.add('weight');
-  const bmi=(w/Math.pow(h/100,2)).toFixed(1);
-  hidePanel();
-  addUser(`Height: ${h}cm &nbsp;·&nbsp; Weight: ${w}kg &nbsp;·&nbsp; BMI: ${bmi}`);
   S.busy=true;setActive(false);
   const resp=await callAPI(`Height: ${h}cm, Weight: ${w}kg`);
   if(resp.message&&resp.message.trim())addBot(resp.message);
@@ -1314,11 +1350,10 @@ async function submitMed(){
   const wasSilent=_silentConfirm;_silentConfirm=false;
   const {height:h,weight:w,alc,cc,hosp,medic,fhist,haz}=S.medVals;
   if(!h||!w){addBot("I still need your height and weight before we can continue");return;}
-  const bmi=(w/Math.pow(h/100,2)).toFixed(1);
   S.stage='medical_done';S.activeCard=null;S.busy=true;setActive(false);
-  if(!wasSilent)addUser(`Height: ${h}cm &nbsp;·&nbsp; Weight: ${w}kg &nbsp;·&nbsp; BMI: ${bmi}<br>Alcohol: ${esc(alc)} &nbsp;·&nbsp; Chronic: ${esc(cc)} &nbsp;·&nbsp; Hospitalised: ${esc(hosp)}<br>Medication: ${esc(medic)} &nbsp;·&nbsp; Family history: ${esc(fhist)} &nbsp;·&nbsp; Hazardous: ${esc(haz)}`);
+  if(!wasSilent)addUser(`Height: ${h}cm &nbsp;·&nbsp; Weight: ${w}kg<br>Alcohol: ${esc(alc)} &nbsp;·&nbsp; Chronic: ${esc(cc)} &nbsp;·&nbsp; Hospitalised: ${esc(hosp)}<br>Medication: ${esc(medic)} &nbsp;·&nbsp; Family history: ${esc(fhist)} &nbsp;·&nbsp; Hazardous: ${esc(haz)}`);
   const det=[['Condition',S.medVals.ccDetail],['Hospitalisation',S.medVals.hospDetail],['Medication',S.medVals.medicDetail],['Family history',S.medVals.fhistDetail]].filter(d=>d[1]).map(d=>`${d[0]} detail: ${d[1]}`).join('; ');
-  const summary=`Height:${h}cm, Weight:${w}kg, BMI:${bmi}, Alcohol:${alc}, Chronic conditions:${cc}, Hospitalised:${hosp}, Medication:${medic}, Family history:${fhist}, Hazardous activities:${haz}${det?' — '+det:''}`;
+  const summary=`Height:${h}cm, Weight:${w}kg, Alcohol:${alc}, Chronic conditions:${cc}, Hospitalised:${hosp}, Medication:${medic}, Family history:${fhist}, Hazardous activities:${haz}${det?' — '+det:''}`;
   if(S.nameMatched)S.stage='doc_uploaded';
   const nextStep=S.nameMatched
     ?(S.kycDone?'the passport has already been verified earlier, so please proceed directly to the signature step':'the passport has already been verified earlier, so please proceed to KYC collection')
@@ -1367,7 +1402,7 @@ async function submitKyc(){
   S.kyc=k;S.kycDone=true;
   hidePanel();S.stage='kyc_done';S.activeCard=null;
   S.busy=true;setActive(false);
-  addUser(`Nationality: ${esc(k.nationality)} &nbsp;·&nbsp; PEP: ${k.pep?'Yes':'No'}<br>${esc(k.house)} ${esc(k.street)}, ${esc(k.city)}, ${esc(k.country)}`);
+  addUser(`Nationality: ${esc(k.nationality)} &nbsp;·&nbsp; PEP: ${k.pep?'Yes':'No'}<br>${esc(k.house)} ${esc(k.street)}, ${esc(k.city)}, ${esc(k.country)}`,{type:'kyc'});
   const resp=await callAPI(`KYC details confirmed — Nationality: ${k.nationality}, PEP: ${k.pep?'yes':'no'}, Address: ${k.house} ${k.street}, ${k.city}, ${k.country} — ${k.pep?'the user has declared PEP status, so acknowledge neutrally that enhanced due diligence may apply and the application may need additional review, then':'please'} proceed to the signature step`);
   if(resp.message&&resp.message.trim())addBot(resp.message);
   await executeActions(resp);
@@ -1440,7 +1475,7 @@ function renderPayment(){
   showPanel(`<div class="pnl">
     <div class="payamt"><span class="payamt-l">First month premium</span><span class="payamt-v">${fmt(amount)}</span></div>
     <div class="flds">
-      <input class="fi" id="py_name" type="text" value="${esc(S.u.name)}" readonly style="opacity:.65;cursor:not-allowed" title="For compliance, the premium must be paid by the policyholder">
+      <input class="fi" id="py_name" type="text" value="${esc(S.u.name)}" readonly style="opacity:.65;cursor:not-allowed">
       <input class="fi" id="py_card" type="tel" placeholder="Card number" maxlength="19" oninput="fmtCard(this)">
       <div class="pay2"><input class="fi" id="py_exp" type="tel" placeholder="MM / YY" maxlength="7" oninput="fmtExp(this)"><input class="fi" id="py_cvv" type="tel" placeholder="CVV" maxlength="4" style="flex:0 0 80px"></div>
     </div>
@@ -1567,7 +1602,7 @@ async function submitNominee(){
   S.nominees=nominees;
   hidePanel();S.stage='nominee_done';
   S.busy=true;setActive(false);
-  addUser('Nominees: '+nominees.map(n=>`${esc(n.name)} (${esc(n.relationship)}) ${n.share}%`).join(' · '));
+  addUser('Nominees: '+nominees.map(n=>`${esc(n.name)} (${esc(n.relationship)}) ${n.share}%`).join(' · '),{type:'nominee'});
   await delay(400);
   renderConfirmation();
   S.busy=false;setActive(true);
@@ -1583,6 +1618,100 @@ function renderConfirmation(){
   const ref='LG-'+Date.now().toString(36).toUpperCase().slice(-6);
 addBot(`You're all set, ${first}! 🎉 Your reference number is ${ref}\n\nYou've done the second most important thing by purchasing a life insurance policy — what comes first is staying healthy so your family and loved ones never have to use it${nomList}\n\nYou'll receive your policy copy within the next 24 hours at ${S.u.email}\n\nYou can also reach us at help@life-guard.com — please use the same email address as on your application so we can identify you faster`);  
   S.stage='completed';inp.placeholder='Your application is being processed — do you have any other questions?';
+}
+
+// ── Edit rollback engine ──
+function performEditRollback(targetRow){
+  const row=targetRow||window._editingRow;
+  if(!row)return;
+  window._editingRow=null;
+  row.classList.remove('editing');
+  const convIdx=parseInt(row.dataset.convIdx)||0;
+  S.conv=S.conv.slice(0,convIdx);
+  if(row.dataset.snapshot){
+    const s=JSON.parse(row.dataset.snapshot);
+    S.u=s.u; S.q=s.q; S.medVals=s.medVals;
+    S.medExplicit=new Set(s.medExplicit||[]);
+    S.kyc=s.kyc; S.kycDone=s.kycDone; S.nameMatched=s.nameMatched;
+    S.nominees=s.nominees||[]; S.activeCard=s.activeCard; S.stage=s.stage;
+  }
+  S.busy=false;
+  while(row.nextSibling)row.nextSibling.remove();
+  row.remove();
+}
+
+function cancelEdit(){
+  if(window._editingRow){window._editingRow.classList.remove('editing');window._editingRow=null;}
+  hidePanel();
+}
+
+function openEditPopup(row){
+  const now=Date.now();if(now-_lastEditOpen<600)return;_lastEditOpen=now;
+  if(window._editingRow)cancelEdit();
+  const type=row.dataset.inputType||'text';
+  const meta=row.dataset.inputMeta?JSON.parse(row.dataset.inputMeta):{};
+
+  if(type==='plan'){
+    window._editingRow=null;row.classList.remove('editing');
+    const convIdx=parseInt(row.dataset.convIdx)||0;
+    S.conv=S.conv.slice(0,convIdx);
+    S.u={name:'',email:'',dob:'',gender:'male',income:0,smoker:false,smokerConfirmed:false,plan:''};
+    S.q={cover:0,term:20,premium:0,fund:'balanced'};
+    S.medVals={alc:'none',cc:'no',hosp:'no',medic:'no',fhist:'no',haz:'no',height:0,weight:0,ccDetail:'',hospDetail:'',medicDetail:'',fhistDetail:''};
+    S.medExplicit=new Set();S.nameMatched=false;
+    S.kyc={nationality:'',pep:null,house:'',street:'',city:'',country:''};S.kycDone=false;
+    S.nominees=[];S.busy=false;
+    while(row.nextSibling)row.nextSibling.remove();row.remove();
+    renderPlans();return;
+  }
+  if(type==='kyc'){performEditRollback(row);renderKyc();return;}
+  if(type==='nominee'){performEditRollback(row);renderNominee();if(S.nominees?.length)handlePrefillNominee(S.nominees);return;}
+
+  window._editingRow=row;
+  row.classList.add('editing');
+
+  const hdr=`<div class="edit-bar"><span class="edit-bar-label">✏ Editing</span><button class="edit-bar-cancel" onclick="cancelEdit()">✕ Cancel</button></div>`;
+  let inner='';
+
+  if(type==='chip'){
+    window._lastChipData=meta;
+    const opts=meta.options||[];
+    inner=`<div class="chipbar"><div class="chips">${opts.map(o=>{const c=o.trim().length===1;return`<button class="chip${c?' circle':''}" onclick="pickChip(${JSON.stringify(o).replace(/"/g,'&quot;')})">${esc(o)}</button>`;}).join('')}</div></div>`;
+    if(meta.upload)inner+=`<div class="pnl" style="padding-top:0"><button class="pnl-sub" style="margin-top:0" onclick="G('chat-file').click()">${ic.doc} Attach document</button></div>`;
+  } else if(type==='dob'){
+    const now=new Date(),iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().split('T')[0];
+    const maxD=iso(new Date(now.getFullYear()-18,now.getMonth(),now.getDate())),minD=iso(new Date(now.getFullYear()-70,now.getMonth(),now.getDate()));
+    inner=`<div class="pnl"><input class="fi" id="dob_inp" type="date" min="${minD}" max="${maxD}" oninput="checkDob(this)" onchange="checkDob(this)"><button class="pnl-sub" id="dob_btn" disabled onclick="submitDob()">Confirm ${ic.arrow}</button></div>`;
+  } else if(type==='income'){
+    inner=`<div class="pnl"><div class="pfxw"><span class="pfx">$</span><input class="fi" style="padding-left:28px" id="inc_inp" type="text" inputmode="numeric" placeholder="0" oninput="fmtNumericInput(this,'inc_btn')"></div><button class="pnl-sub" id="inc_btn" disabled onclick="submitIncome()">Confirm ${ic.arrow}</button></div>`;
+  } else if(type==='amount'){
+    inner=`<div class="pnl"><div class="pfxw"><span class="pfx">$</span><input class="fi" style="padding-left:28px" id="amt_inp" type="text" inputmode="numeric" placeholder="0" oninput="fmtNumericInput(this,'amt_btn')"></div><button class="pnl-sub" id="amt_btn" disabled onclick="submitAmount()" style="margin-bottom:0">Confirm ${ic.arrow}</button><button class="gbtn" style="margin-bottom:10px" onclick="pickChip('Actually, none')">Actually, none</button></div>`;
+  } else if(type==='email'){
+    inner=`<div class="pnl"><input class="fi" id="email_inp" type="email" placeholder="your@email.com" oninput="validateEmailInput(this)"><button class="pnl-sub" id="email_btn" disabled onclick="submitEmail()">Confirm ${ic.arrow}</button></div>`;
+  } else if(type==='hw'){
+    inner=`<div class="pnl"><div class="flds"><div class="bmir"><input class="fi" id="hw_h" type="number" placeholder="Height" min="100" max="250" oninput="checkHW()"><div class="bmib">cm</div></div><div class="bmir"><input class="fi" id="hw_w" type="number" placeholder="Weight" min="30" max="300" oninput="checkHW()"><div class="bmib">kg</div></div></div><button class="pnl-sub" id="hw_btn" disabled onclick="submitHW()">Confirm ${ic.arrow}</button></div>`;
+  } else {
+    inner=`<div class="pnl"><textarea class="fi" id="edit_txt" rows="2" style="resize:none;min-height:52px">${esc(meta.text||'')}</textarea><button class="pnl-sub" onclick="submitEditText()">Send ${ic.arrow}</button></div>`;
+  }
+
+  showPanel(hdr+inner);
+  requestAnimationFrame(()=>{
+    row.scrollIntoView({behavior:'smooth',block:'nearest'});
+    const first=G('panel')?.querySelector('input,textarea');
+    if(first&&type!=='chip')first.focus();
+  });
+}
+
+async function submitEditText(){
+  const el=G('edit_txt');const text=el?.value.trim();
+  if(!text||S.busy)return;
+  hidePanel();performEditRollback();
+  S.busy=true;setActive(false);
+  addUser(esc(text),{type:'text',data:{text}});
+  const resp=await callAPI(text);
+  if(resp.message&&resp.message.trim())addBot(resp.message);
+  await executeActions(resp);ensureProgress();
+  S.busy=false;setActive(true);
 }
 
 // ── Input events ──
