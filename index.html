@@ -869,17 +869,19 @@ async function submitDob(){
   S.busy=false;setActive(true);
 }
 
-function fmtNumericInput(el,btnId){
+function fmtNumericInput(el,btnId,max){
   const raw=el.value.replace(/[^0-9]/g,'');
-  el.value=raw?Number(raw).toLocaleString('en-US'):'';
-  G(btnId).disabled=!raw||Number(raw)<=0;
+  let num=Number(raw);
+  if(max&&num>max)num=max;
+  el.value=num?num.toLocaleString('en-US'):'';
+  G(btnId).disabled=!num||num<=0;
 }
 
 function handleShowIncomeInput(){
   showPanel(`<div class="pnl">
     <div class="pfxw">
       <span class="pfx">$</span>
-      <input class="fi" style="padding-left:28px" id="inc_inp" type="text" inputmode="numeric" placeholder="0" oninput="fmtNumericInput(this,'inc_btn')">
+      <input class="fi" style="padding-left:28px" id="inc_inp" type="text" inputmode="numeric" placeholder="0" oninput="fmtNumericInput(this,'inc_btn',100000)">
     </div>
     <button class="pnl-sub" id="inc_btn" disabled onclick="submitIncome()">Confirm ${ic.arrow}</button>
   </div>`);
@@ -1725,7 +1727,7 @@ function openEditPopup(row){
     const maxD=iso(new Date(now.getFullYear()-18,now.getMonth(),now.getDate())),minD=iso(new Date(now.getFullYear()-70,now.getMonth(),now.getDate()));
     inner=`<div class="pnl"><input class="fi" id="dob_inp" type="date" min="${minD}" max="${maxD}" oninput="checkDob(this)" onchange="checkDob(this)"><button class="pnl-sub" id="dob_btn" disabled onclick="submitDob()">Confirm ${ic.arrow}</button></div>`;
   } else if(type==='income'){
-    inner=`<div class="pnl"><div class="pfxw"><span class="pfx">$</span><input class="fi" style="padding-left:28px" id="inc_inp" type="text" inputmode="numeric" placeholder="0" oninput="fmtNumericInput(this,'inc_btn')"></div><button class="pnl-sub" id="inc_btn" disabled onclick="submitIncome()">Confirm ${ic.arrow}</button></div>`;
+    inner=`<div class="pnl"><div class="pfxw"><span class="pfx">$</span><input class="fi" style="padding-left:28px" id="inc_inp" type="text" inputmode="numeric" placeholder="0" oninput="fmtNumericInput(this,'inc_btn',100000)"></div><button class="pnl-sub" id="inc_btn" disabled onclick="submitIncome()">Confirm ${ic.arrow}</button></div>`;
   } else if(type==='amount'){
     inner=`<div class="pnl"><div class="pfxw"><span class="pfx">$</span><input class="fi" style="padding-left:28px" id="amt_inp" type="text" inputmode="numeric" placeholder="0" oninput="fmtNumericInput(this,'amt_btn')"></div><button class="pnl-sub" id="amt_btn" disabled onclick="submitAmount()" style="margin-bottom:0">Confirm ${ic.arrow}</button><button class="gbtn" style="margin-bottom:10px" onclick="pickChip('Actually, none')">Actually, none</button></div>`;
   } else if(type==='email'){
