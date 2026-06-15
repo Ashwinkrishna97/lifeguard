@@ -1552,7 +1552,7 @@ function renderNominee(){
   if(G('nom_rows'))return;
   S.activeCard='nom_card'; _nomIdx=0;
   showPanel(`<div class="pnl">
-    <p style="font-size:12px;color:var(--t2);margin-bottom:13px;line-height:1.6">Tell us who should receive the policy benefit — up to 3 nominees</p>
+    <p style="font-size:12px;color:var(--t2);margin-bottom:13px;line-height:1.6">Tell us who should receive the policy benefit — up to 10 nominees</p>
     <div id="nom_rows"></div>
     <button class="gbtn" id="nom_add" onclick="addNomRow()" style="margin-bottom:10px">+ Add another nominee</button>
     <div class="nom-bar"><div class="nom-bar-fill" id="nom_fill" style="width:0%"></div></div>
@@ -1589,7 +1589,7 @@ function addNomRow(initPct){
       ${i>0?`<button class="nom-del" onclick="removeNomRow(${i})" type="button">×</button>`:''}
     </div>`;
   G('nom_rows').appendChild(row);
-  if(_nomIdx>=3)G('nom_add').style.display='none';
+  if(_nomIdx>=10)G('nom_add').style.display='none';
   checkNoms();
 }
 
